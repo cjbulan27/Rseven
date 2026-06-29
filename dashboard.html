@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Rseven Dashboard</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: sans-serif;
+      background: #1a0a2e;
+      min-height: 100vh;
+      display: flex;
+      overflow-x: hidden;
+    }
+
+    @keyframes float   { 0%,100%{ transform:translateY(0); } 50%{ transform:translateY(-5px); } }
+    @keyframes shimmer { 0%{ background-position:-200% center; } 100%{ background-position:200% center; } }
+    @keyframes pulse   { 0%,100%{ box-shadow:0 0 0 0 rgba(245,197,24,0.4); } 50%{ box-shadow:0 0 0 10px rgba(245,197,24,0); } }
+    @keyframes slideIn { from{ transform:translateX(-100%); opacity:0; } to{ transform:translateX(0); opacity:1; } }
+    @keyframes fadeUp  { from{ opacity:0; transform:translateY(16px); } to{ opacity:1; transform:translateY(0); } }
+    @keyframes orb1    { 0%,100%{ transform:translate(0,0) scale(1); } 33%{ transform:translate(30px,-20px) scale(1.1); } 66%{ transform:translate(-20px,15px) scale(0.9); } }
+    @keyframes orb2    { 0%,100%{ transform:translate(0,0) scale(1); } 33%{ transform:translate(-25px,20px) scale(0.95); } 66%{ transform:translate(20px,-10px) scale(1.05); } }
+    @keyframes spin    { to { transform:rotate(360deg); } }
+
+    .orb { position:fixed; border-radius:50%; filter:blur(60px); opacity:0.2; pointer-events:none; z-index:0; }
+    .orb1 { width:280px; height:280px; background:#7b3fe4; top:-80px; left:-80px; animation:orb1 8s ease-in-out infinite; }
+    .orb2 { width:240px; height:240px; background:#f5c518; bottom:-60px; right:-60px; animation:orb2 10s ease-in-out infinite; }
+
+    /* ===== SIDEBAR ===== */
+    .sidebar {
+      width:260px; min-width:260px; height:100vh;
+      background:#2d1054;
+      border-right:0.5px solid #5c3d8f;
+      display:flex; flex-direction:column; align-items:center;
+      padding:2rem 0 1.5rem;
+      position:relative; z-index:20;
+      animation:slideIn 0.5s ease both;
+    }
+    .sidebar-logo {
+      width:100px; height:100px; border-radius:12px; margin-bottom:0.75rem;
+      animation:float 3s ease-in-out infinite, pulse 2.5s ease-in-out infinite;
+      object-fit:cover; display:block;
+    }
+    .sidebar-name {
+      font-size:15px; font-weight:600; text-align:center; letter-spacing:1px;
+      background:linear-gradient(90deg,#f5c518,#fff4a0,#f5c518);
+      background-size:200% auto;
+      -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+      animation:shimmer 3s linear infinite;
+    }
+    .sidebar-sub { color:#9d7fc4; font-size:12px; text-align:center; margin-top:4px; }
+    .sidebar-divider { width:75%; height:0.5px; background:#5c3d8f; margin:1.2rem 0 1rem; }
+    .sidebar-nav { display:flex; flex-direction:column; width:100%; gap:4px; flex:1; padding:0 12px; }
+    .nav-item {
+      width:100%; padding:12px 16px; color:#c9aff0; font-size:14px; font-weight:500;
+      cursor:pointer; border-radius:10px; display:flex; align-items:center; gap:10px;
+      text-decoration:none; transition:background 0.2s, color 0.2s;
+    }
+    .nav-item i { font-size:18px; }
+    .nav-item:hover { background:rgba(245,197,24,0.08); color:#f5c518; }
+    .nav-item.active { background:rgba(245,197,24,0.15); color:#f5c518; border:0.5px solid rgba(245,197,24,0.3); }
+    .sidebar-logout {
+      width:calc(100% - 24px); margin:0 12px; padding:12px 16px; color:#e24b4a;
+      font-size:14px; font-weight:500; cursor:pointer; border-radius:10px;
+      display:flex; align-items:center; gap:10px;
+      border:0.5px solid rgba(226,75,74,0.3); transition:background 0.2s;
+    }
+    .sidebar-logout i { font-size:18px; }
+    .sidebar-logout:hover { background:rgba(226,75,74,0.1); }
+
+    .hamburger {
+      display:none; position:fixed; top:16px; left:16px; z-index:30;
+      background:#2d1054; border:0.5px solid #5c3d8f;
+      border-radius:8px; padding:8px 10px; cursor:pointer; color:#f5c518;
+    }
+    .hamburger i { font-size:22px; }
+    .overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:10; }
+    .overlay.open { display:block; }
+
+    /* ===== MAIN ===== */
+    .dash-main {
+      flex:1; min-height:100vh; overflow-y:auto; background:#1a0a2e;
+      padding:2.5rem; display:flex; flex-direction:column; gap:1.5rem;
+      position:relative; z-index:1; animation:fadeUp 0.6s ease 0.2s both;
+    }
+
+    /* ===== BUTTONS ===== */
+    .dash-btn {
+      display:inline-flex; align-items:center; gap:8px; padding:12px 28px;
+      background:#7b3fe4; color:#fff; border:none; border-radius:14px;
+      font-size:15px; font-weight:600; cursor:pointer; align-self:flex-start;
+      transition:background 0.2s;
+    }
+    .dash-btn:hover { background:#6a30c8; }
+
+    .add-btn {
+      padding:11px 28px; background:#7b3fe4; color:#fff; border:none;
+      border-radius:8px; font-size:14px; font-weight:600; cursor:pointer;
+      display:inline-flex; align-items:center; gap:6px;
+      transition:background 0.2s; align-self:flex-end;
+    }
+    .add-btn:hover { background:#6a30c8; }
+    .add-btn:disabled { opacity:0.5; cursor:not-allowed; }
+
+    .loading-spinner {
+      display:inline-block; width:16px; height:16px;
+      border:2px solid #fff; border-radius:50%; border-top-color:transparent;
+      animation:spin 0.6s linear infinite;
+    }
+
+    /* ===== PANEL ===== */
+    .panel { background:#2d1054; border:0.5px solid #5c3d8f; border-radius:14px; padding:1.6rem; }
+    .panel-title { color:#f5c518; font-size:13px; font-weight:600; margin-bottom:1.2rem; text-transform:uppercase; letter-spacing:0.5px; }
+
+    /* ===== FORM ===== */
+    .form-grid { display:flex; flex-direction:column; gap:14px; }
+    .form-row  { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+    .form-field { display:flex; flex-direction:column; gap:6px; }
+    .form-field label { font-size:12px; color:#9d7fc4; text-transform:uppercase; letter-spacing:0.6px; }
+    .form-field input,
+    .form-field select {
+      padding:10px 14px; background:#1a0a2e; border:0.5px solid #5c3d8f;
+      border-radius:8px; color:#f0e6ff; font-size:14px; outline:none; width:100%;
+      transition:border-color 0.2s;
+    }
+    .form-field input::placeholder { color:#6b4d8a; }
+    .form-field input:focus,
+    .form-field select:focus { border-color:#f5c518; }
+    .form-field select option { background:#2d1054; }
+
+    /* ===== TABLE ===== */
+    .inv-table { width:100%; border-collapse:collapse; }
+    .inv-table th {
+      background:rgba(245,197,24,0.1); color:#f5c518;
+      font-size:12px; padding:11px 14px; text-align:left; letter-spacing:0.5px;
+    }
+    .inv-table td { color:#c9aff0; font-size:13px; padding:11px 14px; border-top:0.5px solid #3d1a6e; }
+    .inv-table tr:hover td { background:rgba(245,197,24,0.04); }
+    .del-btn {
+      background:rgba(226,75,74,0.1); color:#e24b4a;
+      border:0.5px solid rgba(226,75,74,0.3); border-radius:6px;
+      padding:5px 8px; cursor:pointer; transition:background 0.2s;
+    }
+    .del-btn:hover { background:rgba(226,75,74,0.2); }
+    .del-btn:disabled { opacity:0.3; cursor:not-allowed; }
+
+    /* ===== TOAST ===== */
+    .toast {
+      position:fixed; bottom:20px; right:20px; padding:14px 24px;
+      border-radius:8px; color:#fff; font-size:14px; font-weight:500;
+      z-index:1000; opacity:0; transform:translateY(20px);
+      transition:opacity 0.3s, transform 0.3s; pointer-events:none;
+    }
+    .toast.show { opacity:1; transform:translateY(0); }
+    .toast.success { background:#22c55e; }
+    .toast.error   { background:#ef4444; }
+    .toast.info    { background:#3b82f6; }
+
+    /* ===== MODAL ===== */
+    .modal-overlay {
+      position:fixed; inset:0; background:rgba(10,4,20,0.7);
+      z-index:500; display:none; align-items:center; justify-content:center; padding:20px;
+    }
+    .modal-overlay.open { display:flex; }
+    .modal-box {
+      background:#2d1054; border:0.5px solid #5c3d8f; border-radius:16px;
+      padding:24px; width:90%; max-width:900px; max-height:90vh; overflow-y:auto;
+      box-shadow:0 20px 60px rgba(0,0,0,0.5); animation:fadeUp 0.3s ease;
+    }
+    .modal-box h3 { font-size:16px; color:#f5c518; margin-bottom:14px; display:flex; align-items:center; gap:10px; }
+    .modal-box .close-modal {
+      margin-left:auto; background:transparent; border:0.5px solid #5c3d8f;
+      border-radius:8px; padding:6px 14px; color:#9d7fc4; cursor:pointer; transition:0.2s;
+    }
+    .modal-box .close-modal:hover { border-color:#f87171; color:#f87171; }
+
+    .report-stats { display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:12px; margin-bottom:16px; }
+    .report-stat { background:#1a0a2e; border:0.5px solid #5c3d8f; border-radius:10px; padding:12px 16px; text-align:center; }
+    .report-stat .stat-value { font-size:20px; font-weight:700; color:#f5c518; }
+    .report-stat .stat-label { font-size:11px; color:#9d7fc4; text-transform:uppercase; letter-spacing:0.5px; margin-top:2px; }
+
+    .report-table-wrap { max-height:400px; overflow:auto; border-radius:10px; border:0.5px solid #5c3d8f; }
+    .report-table-wrap table { width:100%; border-collapse:collapse; font-size:13px; }
+    .report-table-wrap th {
+      background:#1a0a2e; color:#f5c518; padding:10px 12px; text-align:left;
+      position:sticky; top:0; z-index:2; border-bottom:1px solid #5c3d8f;
+    }
+    .report-table-wrap td { padding:8px 12px; color:#c9aff0; border-bottom:0.5px solid #3d1a6e; }
+    .report-table-wrap tr:hover td { background:rgba(245,197,24,0.04); }
+    .report-total-row td {
+      background:rgba(245,197,24,0.1); color:#f5c518; font-weight:600; border-top:1px solid #f5c518;
+    }
+
+    @media(max-width:768px) {
+      .sidebar { position:fixed; left:0; top:0; transform:translateX(-100%); transition:transform 0.35s; }
+      .sidebar.open { transform:translateX(0); }
+      .hamburger { display:flex; }
+      .dash-main { padding:1.5rem; padding-top:4.5rem; }
+      .form-row { grid-template-columns:1fr; }
+      .toast { bottom:10px; right:10px; left:10px; text-align:center; }
+      .modal-box { padding:16px; width:98%; }
+      .report-stats { grid-template-columns:1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="orb orb1"></div>
+  <div class="orb orb2"></div>
+  <div class="overlay" id="overlay" onclick="closeNav()"></div>
+  <button class="hamburger" onclick="toggleNav()"><i class="ti ti-menu-2"></i></button>
+
+  <!-- SIDEBAR -->
+  <div class="sidebar" id="sidebar">
+    <img src="89072922_3028538593858631_7555063944310685696_n.jpg" alt="Rseven Logo" class="sidebar-logo" />
+    <div class="sidebar-name">RSEVEN</div>
+    <div class="sidebar-sub">Graphic Solution</div>
+    <div class="sidebar-divider"></div>
+    <div class="sidebar-nav">
+      <a class="nav-item" href="homepage.html"><i class="ti ti-home"></i> Home</a>
+      <a class="nav-item active" href="dashboard.html"><i class="ti ti-layout-dashboard"></i> Dashboard</a>
+      <a class="nav-item" href="inventory.html"><i class="ti ti-box"></i> Inventory</a>
+      <a class="nav-item" href="sales.html"><i class="ti ti-chart-bar"></i> Sales Reports</a>
+      <a class="nav-item" href="orders.html"><i class="ti ti-orders"></i> Orders</a>
+    </div>
+    <div class="sidebar-logout" onclick="handleLogout()">
+      <i class="ti ti-logout"></i> Logout
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="dash-main">
+
+    <!-- Header -->
+    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+      <button class="dash-btn"><i class="ti ti-layout-dashboard"></i> Dashboard</button>
+      <button class="add-btn" style="background:#3b82f6;" onclick="openReportModal()">
+        <i class="ti ti-file-report"></i> View Previous Orders
+      </button>
+    </div>
+
+    <!-- Form -->
+    <div class="panel">
+      <div class="form-grid">
+        <div class="form-row">
+          <div class="form-field" style="grid-column: span 2;">
+            <label>Client Name</label>
+            <input type="text" id="d-client" placeholder="Enter client name..." />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-field">
+            <label>Contact</label>
+            <input type="text" id="d-contact" placeholder="Phone or email..." />
+          </div>
+          <div class="form-field">
+            <label>Product</label>
+            <select id="d-product">
+              <option value="">Select...</option>
+              <option>Scripture Art</option>
+              <option>Gospel Hexagon Wall Decor</option>
+              <option>Keychain</option>
+              <option>Sticker</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-field">
+            <label>Quantity</label>
+            <input type="number" id="d-qty" placeholder="0" min="0" />
+          </div>
+          <div class="form-field">
+            <label>Price (₱)</label>
+            <input type="number" id="d-price" placeholder="0.00" min="0" step="0.01" />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-field">
+            <label>Size</label>
+            <input type="text" id="d-size" placeholder="Enter size..." />
+          </div>
+          <div class="form-field">
+            <label>Remarks</label>
+            <select id="d-remarks">
+              <option value="">Select...</option>
+              <option value="50%">50%</option>
+              <option value="Full Payment">Full Payment</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-field">
+            <label>Mode of Payment</label>
+            <select id="d-payment">
+              <option value="">Select...</option>
+              <option value="Cash">Cash</option>
+              <option value="GCash">GCash</option>
+              <option value="Bank Transfer">Bank Transfer</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <label>Order Date</label>
+            <input type="date" id="d-date" />
+          </div>
+        </div>
+        <!-- NEW ROW: Pickup Date -->
+        <div class="form-row">
+          <div class="form-field">
+            <label>Pickup Date</label>
+            <input type="date" id="d-pickup" />
+          </div>
+          <div class="form-field" style="justify-content:flex-end;">
+            <!-- Empty spacer for alignment -->
+          </div>
+        </div>
+        <div style="display:flex; justify-content:flex-end;">
+          <button class="add-btn" id="addBtn" onclick="addItem()">
+            <i class="ti ti-plus"></i> Add Order
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Table -->
+    <div class="panel">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+        <div class="panel-title" style="margin-bottom:0;">Pre-View Orders</div>
+        <button class="add-btn" style="padding:6px 16px; font-size:12px; background:#3b82f6;" onclick="loadItems()">
+          <i class="ti ti-refresh"></i> Refresh
+        </button>
+      </div>
+      <div style="overflow-x:auto;">
+        <table class="inv-table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Client</th>
+              <th>Contact</th>
+              <th>Product</th>
+              <th>Price</th>
+              <th>Qty</th>
+              <th>Size</th>
+              <th>Remarks</th>
+              <th>Payment</th>
+              <th>Pickup Date</th>
+              <th>Total</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="d-tbody">
+            <tr><td colspan="12" style="text-align:center; color:#6b4d8a; padding:2rem;">Loading orders...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- REPORT MODAL -->
+  <div class="modal-overlay" id="reportModal">
+    <div class="modal-box">
+      <h3>
+        <i class="ti ti-file-report"></i> Previous Orders Report
+        <button class="close-modal" onclick="closeReportModal()">✕ Close</button>
+      </h3>
+
+      <div class="report-stats">
+        <div class="report-stat">
+          <div class="stat-value" id="reportTotalOrders">0</div>
+          <div class="stat-label">Total Orders</div>
+        </div>
+        <div class="report-stat">
+          <div class="stat-value" id="reportTotalItems">0</div>
+          <div class="stat-label">Total Items</div>
+        </div>
+        <div class="report-stat">
+          <div class="stat-value" id="reportTotalSales">₱0.00</div>
+          <div class="stat-label">Total Sales</div>
+        </div>
+        <div class="report-stat">
+          <div class="stat-value" id="reportAvgOrder">₱0.00</div>
+          <div class="stat-label">Avg Order</div>
+        </div>
+      </div>
+
+      <div style="display:flex; gap:10px; margin-bottom:12px; flex-wrap:wrap; align-items:center;">
+        <input type="date" id="reportDateFrom"
+          style="padding:8px 12px; background:#1a0a2e; border:0.5px solid #5c3d8f; border-radius:6px; color:#f0e6ff;" />
+        <span style="color:#9d7fc4;">to</span>
+        <input type="date" id="reportDateTo"
+          style="padding:8px 12px; background:#1a0a2e; border:0.5px solid #5c3d8f; border-radius:6px; color:#f0e6ff;" />
+        <button class="add-btn" style="padding:6px 16px; font-size:12px; background:#3b82f6;" onclick="generateReport()">
+          <i class="ti ti-filter"></i> Filter
+        </button>
+        <button class="add-btn" style="padding:6px 16px; font-size:12px; background:#22c55e;" onclick="clearReportFilter()">
+          <i class="ti ti-eraser"></i> Clear
+        </button>
+      </div>
+
+      <div class="report-table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Date</th><th>Client</th><th>Product</th>
+              <th>Qty</th><th>Price</th><th>Remarks</th>
+              <th>Payment</th><th>Pickup Date</th><th>Total</th>
+            </tr>
+          </thead>
+          <tbody id="reportBody">
+            <tr><td colspan="9" style="text-align:center; color:#6b4d8a; padding:20px;">No orders found</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ============================================================
+    // SUPABASE SETUP
+    // ============================================================
+    const SUPABASE_URL      = 'https://pxnmojyievkshwaklfzj.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB4bm1vanlpZXZrc2h3YWtsZnpqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIyNDQ1MTAsImV4cCI6MjA5NzgyMDUxMH0.UDC2eg76kA4YJKhlh6sLhdFubF7L_zwWsnJxKnUwOGQ';
+
+    // Supabase v2 from CDN
+    const { createClient } = supabase;
+    const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // ============================================================
+    // STATE
+    // ============================================================
+    let inventoryItems = [];
+
+    // ============================================================
+    // TOAST
+    // ============================================================
+    function showToast(message, type = 'info') {
+      const toast = document.createElement('div');
+      toast.className = `toast ${type}`;
+      toast.textContent = message;
+      document.body.appendChild(toast);
+      setTimeout(() => toast.classList.add('show'), 10);
+      setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 300);
+      }, 3000);
+    }
+
+    // ============================================================
+    // ESCAPE HTML
+    // ============================================================
+    function escapeHtml(text) {
+      if (text === null || text === undefined) return '';
+      const div = document.createElement('div');
+      div.textContent = String(text);
+      return div.innerHTML;
+    }
+
+    // ============================================================
+    // LOAD ORDERS
+    // ============================================================
+    async function loadItems() {
+      const tbody = document.getElementById('d-tbody');
+      tbody.innerHTML = '<tr><td colspan="12" style="text-align:center; color:#6b4d8a; padding:2rem;">Loading orders...</td></tr>';
+
+      try {
+        const { data, error } = await db
+          .from('orders')
+          .select('*')
+          .order('date', { ascending: false });
+
+        if (error) throw error;
+
+        inventoryItems = data || [];
+        renderTable(inventoryItems);
+        showToast('Orders loaded!', 'success');
+      } catch (err) {
+        console.error('Load error:', err);
+        tbody.innerHTML = `<tr><td colspan="12" style="text-align:center; color:#ef4444; padding:2rem;">
+          Error: ${escapeHtml(err.message)}. Check your Supabase table name and RLS policies.
+        </td></tr>`;
+        showToast('Error loading orders: ' + err.message, 'error');
+      }
+    }
+
+    // ============================================================
+    // RENDER TABLE
+    // ============================================================
+    function renderTable(items) {
+      const tbody = document.getElementById('d-tbody');
+
+      if (!items || items.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="12" style="text-align:center; color:#6b4d8a; padding:2rem;">No orders found.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = items.map(item => {
+        const total = (Number(item.quantity) || 0) * (Number(item.price) || 0);
+        const pickupDate = item.pickup_date || 'N/A';
+        return `
+          <tr>
+            <td>${escapeHtml(item.date || 'N/A')}</td>
+            <td>${escapeHtml(item.client_name)}</td>
+            <td>${escapeHtml(item.contact)}</td>
+            <td>${escapeHtml(item.product)}</td>
+            <td>₱${Number(item.price || 0).toFixed(2)}</td>
+            <td>${Number(item.quantity || 0)}</td>
+            <td>${escapeHtml(item.size)}</td>
+            <td><span style="color:${item.remarks === '50%' ? '#facc15' : '#4ade80'}">${escapeHtml(item.remarks)}</span></td>
+            <td>${escapeHtml(item.payment)}</td>
+            <td>${escapeHtml(pickupDate)}</td>
+            <td>₱${total.toLocaleString('en-PH', { minimumFractionDigits: 2 })}</td>
+            <td>
+              <button class="del-btn" onclick="deleteItem(${item.id})" title="Delete">
+                <i class="ti ti-trash"></i>
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    // ============================================================
+    // ADD ORDER
+    // ============================================================
+    async function addItem() {
+      const client   = document.getElementById('d-client').value.trim();
+      const contact  = document.getElementById('d-contact').value.trim();
+      const product  = document.getElementById('d-product').value;
+      const qty      = parseInt(document.getElementById('d-qty').value) || 0;
+      const price    = parseFloat(document.getElementById('d-price').value) || 0;
+      const size     = document.getElementById('d-size').value.trim();
+      const remarks  = document.getElementById('d-remarks').value;
+      const payment  = document.getElementById('d-payment').value;
+      const date     = document.getElementById('d-date').value || new Date().toISOString().split('T')[0];
+      const pickup   = document.getElementById('d-pickup').value || null;
+
+      // Validation
+      if (!client)            { showToast('Please enter a client name.', 'error'); return; }
+      if (!contact)           { showToast('Please enter contact information.', 'error'); return; }
+      if (!product)           { showToast('Please select a product.', 'error'); return; }
+      if (qty <= 0)           { showToast('Please enter a valid quantity.', 'error'); return; }
+      if (price <= 0)         { showToast('Please enter a valid price.', 'error'); return; }
+      if (!size)              { showToast('Please enter a size.', 'error'); return; }
+      if (!remarks)           { showToast('Please select remarks.', 'error'); return; }
+      if (!payment)           { showToast('Please select mode of payment.', 'error'); return; }
+
+      const addBtn = document.getElementById('addBtn');
+      addBtn.disabled = true;
+      addBtn.innerHTML = '<span class="loading-spinner"></span> Saving...';
+
+      try {
+        const { error } = await db.from('orders').insert([{
+          client_name: client,
+          contact,
+          product,
+          quantity: qty,
+          price,
+          size,
+          remarks,
+          payment,
+          date,
+          pickup_date: pickup,
+        }]);
+
+        if (error) throw error;
+
+        showToast('Order added successfully!', 'success');
+
+        // Clear form
+        ['d-client','d-contact','d-qty','d-price','d-size','d-pickup'].forEach(id => {
+          document.getElementById(id).value = '';
+        });
+        ['d-product','d-remarks','d-payment'].forEach(id => {
+          document.getElementById(id).value = '';
+        });
+        document.getElementById('d-date').value = new Date().toISOString().split('T')[0];
+
+        await loadItems();
+
+      } catch (err) {
+        console.error('Add error:', err);
+        showToast('Error adding order: ' + err.message, 'error');
+      } finally {
+        addBtn.disabled = false;
+        addBtn.innerHTML = '<i class="ti ti-plus"></i> Add Order';
+      }
+    }
+
+    // ============================================================
+    // DELETE ORDER
+    // ============================================================
+    async function deleteItem(id) {
+      if (!confirm('Delete this order?')) return;
+
+      try {
+        const { error } = await db.from('orders').delete().eq('id', id);
+        if (error) throw error;
+        showToast('Order deleted!', 'success');
+        await loadItems();
+      } catch (err) {
+        console.error('Delete error:', err);
+        showToast('Error deleting: ' + err.message, 'error');
+      }
+    }
+
+    // ============================================================
+    // REPORT MODAL
+    // ============================================================
+    function openReportModal() {
+      document.getElementById('reportModal').classList.add('open');
+      generateReport();
+    }
+
+    function closeReportModal() {
+      document.getElementById('reportModal').classList.remove('open');
+    }
+
+    function generateReport() {
+      const fromDate = document.getElementById('reportDateFrom').value;
+      const toDate   = document.getElementById('reportDateTo').value;
+
+      let filtered = [...inventoryItems];
+      if (fromDate) filtered = filtered.filter(i => (i.date || '') >= fromDate);
+      if (toDate)   filtered = filtered.filter(i => (i.date || '') <= toDate);
+      filtered.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+
+      const totalOrders = filtered.length;
+      const totalItems  = filtered.reduce((s, i) => s + (Number(i.quantity) || 0), 0);
+      const totalSales  = filtered.reduce((s, i) => s + ((Number(i.quantity) || 0) * (Number(i.price) || 0)), 0);
+      const avgOrder    = totalOrders > 0 ? totalSales / totalOrders : 0;
+
+      document.getElementById('reportTotalOrders').textContent = totalOrders;
+      document.getElementById('reportTotalItems').textContent  = totalItems;
+      document.getElementById('reportTotalSales').textContent  = '₱' + totalSales.toLocaleString('en-PH', { minimumFractionDigits: 2 });
+      document.getElementById('reportAvgOrder').textContent    = '₱' + avgOrder.toLocaleString('en-PH', { minimumFractionDigits: 2 });
+
+      const tbody = document.getElementById('reportBody');
+      if (filtered.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="9" style="text-align:center; color:#6b4d8a; padding:20px;">No orders in this date range</td></tr>';
+        return;
+      }
+
+      let runningTotal = 0;
+      let html = filtered.map(item => {
+        const total = (Number(item.quantity) || 0) * (Number(item.price) || 0);
+        runningTotal += total;
+        const pickupDate = item.pickup_date || 'N/A';
+        return `<tr>
+          <td>${escapeHtml(item.date || 'N/A')}</td>
+          <td>${escapeHtml(item.client_name)}</td>
+          <td>${escapeHtml(item.product)}</td>
+          <td>${item.quantity || 0}</td>
+          <td>₱${Number(item.price || 0).toFixed(2)}</td>
+          <td><span style="color:${item.remarks === '50%' ? '#facc15' : '#4ade80'}">${escapeHtml(item.remarks)}</span></td>
+          <td>${escapeHtml(item.payment)}</td>
+          <td>${escapeHtml(pickupDate)}</td>
+          <td>₱${total.toLocaleString('en-PH', { minimumFractionDigits: 2 })}</td>
+        </tr>`;
+      }).join('');
+
+      html += `<tr class="report-total-row">
+        <td colspan="8" style="text-align:right;">TOTAL:</td>
+        <td>₱${runningTotal.toLocaleString('en-PH', { minimumFractionDigits: 2 })}</td>
+      </tr>`;
+
+      tbody.innerHTML = html;
+    }
+
+    function clearReportFilter() {
+      document.getElementById('reportDateFrom').value = '';
+      document.getElementById('reportDateTo').value   = '';
+      generateReport();
+    }
+
+    // ============================================================
+    // NAV
+    // ============================================================
+    function toggleNav() {
+      document.getElementById('sidebar').classList.toggle('open');
+      document.getElementById('overlay').classList.toggle('open');
+    }
+    function closeNav() {
+      document.getElementById('sidebar').classList.remove('open');
+      document.getElementById('overlay').classList.remove('open');
+    }
+    function handleLogout() {
+      sessionStorage.removeItem('username');
+      window.location.href = 'login page.html';
+    }
+
+    // ============================================================
+    // INIT
+    // ============================================================
+    document.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('d-date').value = new Date().toISOString().split('T')[0];
+      // Set default pickup date to 3 days from now
+      const pickupDefault = new Date();
+      pickupDefault.setDate(pickupDefault.getDate() + 3);
+      document.getElementById('d-pickup').value = pickupDefault.toISOString().split('T')[0];
+      loadItems();
+    });
+
+    // Close modal on overlay click
+    document.getElementById('reportModal').addEventListener('click', function(e) {
+      if (e.target === this) closeReportModal();
+    });
+
+    // Enter key submits form
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' && document.activeElement.closest('.form-grid')) {
+        e.preventDefault();
+        addItem();
+      }
+    });
+  </script>
+</body>
+</html>

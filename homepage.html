@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Rseven Graphic Solution</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css" />
+  
+  <!-- Supabase SDK -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: sans-serif;
+      background: #1a0a2e;
+      min-height: 100vh;
+      display: flex;
+      overflow-x: hidden;
+    }
+
+    @keyframes fadeDown { from { opacity:0; transform:translateY(-16px); } to { opacity:1; transform:translateY(0); } }
+    @keyframes fadeUp   { from { opacity:0; transform:translateY(16px);  } to { opacity:1; transform:translateY(0); } }
+    @keyframes float    { 0%,100% { transform:translateY(0);  } 50% { transform:translateY(-5px); } }
+    @keyframes shimmer  { 0%   { background-position:-200% center; } 100% { background-position:200% center; } }
+    @keyframes pulse    { 0%,100% { box-shadow:0 0 0 0 rgba(245,197,24,0.4); } 50% { box-shadow:0 0 0 10px rgba(245,197,24,0); } }
+    @keyframes spin     { from { transform:rotate(0deg); } to { transform:rotate(360deg); } }
+    @keyframes btnPress { 0%,100%{ transform:scale(1); } 50%{ transform:scale(0.97); } }
+    @keyframes checkmark{ 0%{ stroke-dashoffset:40; } 100%{ stroke-dashoffset:0; } }
+    @keyframes inputGlow{ from{ border-color:#f5c518; box-shadow:0 0 0 0 rgba(245,197,24,0.3); } to{ border-color:#f5c518; box-shadow:0 0 0 4px rgba(245,197,24,0.08); } }
+    @keyframes slideIn  { from{ transform:translateX(-100%); opacity:0; } to{ transform:translateX(0); opacity:1; } }
+    @keyframes orb1     { 0%,100%{ transform:translate(0,0) scale(1); } 33%{ transform:translate(30px,-20px) scale(1.1); } 66%{ transform:translate(-20px,15px) scale(0.9); } }
+    @keyframes orb2     { 0%,100%{ transform:translate(0,0) scale(1); } 33%{ transform:translate(-25px,20px) scale(0.95); } 66%{ transform:translate(20px,-10px) scale(1.05); } }
+    @keyframes pulseGlow {
+      0%, 100% { opacity: 0.6; }
+      50% { opacity: 1; }
+    }
+
+    /* ===== WELCOME BACK - TOP LEFT ===== */
+    .welcome-container {
+      position: fixed;
+      top: 20px;
+      left: 280px;
+      z-index: 25;
+    }
+
+    .welcome-box {
+      display: flex;
+      align-items: center;
+      background: #2d1054;
+      border: 0.5px solid #5c3d8f;
+      border-radius: 10px;
+      padding: 30px 46px;
+      box-sizing: border-box;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+      min-width: 300px;
+    }
+
+    .welcome-content {
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+    }
+
+    .welcome-greeting {
+      color: #f5c518;
+      font-size: 23px;
+      font-weight: 600;
+      text-align: left;
+    }
+
+    .welcome-date {
+      color: #9d7fc4;
+      font-size: 21px;
+      text-align: left;
+    }
+
+    /* Orbs */
+    .orb { position:fixed; border-radius:50%; filter:blur(60px); opacity:0.2; pointer-events:none; z-index:0; }
+    .orb1 { width:280px; height:280px; background:#7b3fe4; top:-80px; left:-80px; animation:orb1 8s ease-in-out infinite; }
+    .orb2 { width:240px; height:240px; background:#f5c518; bottom:-60px; right:-60px; animation:orb2 10s ease-in-out infinite; }
+
+    /* Particles */
+    .particles { position:fixed; inset:0; pointer-events:none; overflow:hidden; z-index:0; }
+    .particle  { position:absolute; width:3px; height:3px; background:#f5c518; border-radius:0px; }
+
+    /* Overlay for mobile */
+    .overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:10; }
+    .overlay.open { display:block; }
+
+    /* ===== SIDEBAR ===== */
+    .nav-item.active{
+      background: rgba(245,197,24,0.15);
+      color: #f5c518;
+      border: 0.5px solid rgba(245,197,24,0.3);
+      border-radius: 10px;
+    }
+    .sidebar {
+      width: 260px; min-width:260px; height:100vh;
+      background: #2d1054;
+      border-right: 0.5px solid #5c3d8f;
+      display:flex; flex-direction:column; align-items:center;
+      padding: 2rem 0 1.5rem;
+      position: relative; z-index:20;
+      transition: transform 0.35s cubic-bezier(.4,0,.2,1);
+      animation: slideIn 0.5s ease both;
+    }
+
+    .sidebar-logo {
+      width:100px; height:100px;
+      animation: float 3s ease-in-out infinite, pulse 2.5s ease-in-out infinite;
+      margin-bottom: 0.75rem;
+      object-fit: contain; border-radius:12px;
+    }
+
+    .sidebar-name {
+      color:#f5c518; font-size:15px; font-weight:600; text-align:center;
+      letter-spacing:1px; line-height:1.5;
+      background: linear-gradient(90deg,#f5c518,#fff4a0,#f5c518);
+      background-size:200% auto;
+      -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+      animation: shimmer 3s linear infinite;
+    }
+    .sidebar-sub { color:#9d7fc4; font-size:12px; text-align:center; margin-top:4px; }
+
+    .sidebar-divider { width:75%; height:0.5px; background:#5c3d8f; margin:1.2rem 0 1rem; }
+
+    .sidebar-nav { 
+      display:flex; 
+      flex-direction:column; 
+      width:100%; 
+      gap:4px; 
+      flex:1; 
+      padding:0 12px; 
+    }
+
+    .nav-item {
+      width:100%; 
+      padding:12px 16px;
+      color:#c9aff0; 
+      font-size:14px; 
+      font-weight:500;
+      cursor:pointer; 
+      border-radius:10px;
+      display:flex; 
+      align-items:center; 
+      gap:10px;
+      transition:background 0.2s, color 0.2s;
+      text-decoration:none;
+    }
+    .nav-item i { font-size:18px; }
+    .nav-item:hover { background:rgba(245,197,24,0.08); color:#f5c518; }
+    .nav-item.active { background:rgba(245,197,24,0.15); color:#f5c518; border:0.5px solid rgba(245,197,24,0.3); }
+
+    .sidebar-logout {
+      width:calc(100% - 24px); 
+      margin:0 12px;
+      padding:12px 16px; 
+      color:#e24b4a; 
+      font-size:14px; 
+      font-weight:500;
+      cursor:pointer; 
+      border-radius:10px;
+      display:flex; 
+      align-items:center; 
+      gap:10px;
+      transition:background 0.2s;
+      border:0.5px solid rgba(226,75,74,0.3);
+    }
+    .sidebar-logout i { font-size:18px; }
+    .sidebar-logout:hover { background:rgba(226,75,74,0.1); }
+
+    /* Hamburger toggle (mobile) */
+    .hamburger {
+      display:none; 
+      position:fixed; 
+      top:16px; 
+      left:16px; 
+      z-index:30;
+      background:#2d1054; 
+      border:0.5px solid #5c3d8f;
+      border-radius:8px; 
+      padding:8px 10px; 
+      cursor:pointer; 
+      color:#f5c518;
+    }
+    .hamburger i { font-size:22px; }
+
+    /* ===== HOME PAGE ===== */
+    .home-page {
+      flex:1;
+      min-height: 100vh;
+      overflow-y: auto;
+      background: #1a0a2e;
+      padding: 20px;
+      padding-top: 160px;
+      display:flex; 
+      flex-direction:column; 
+      gap:1.5rem;
+      position:relative; 
+      z-index:1;
+      animation: fadeUp 0.6s ease 0.2s both;
+    }
+
+    .home-page-header { 
+      color:#f5c518; 
+      font-size:22px; 
+      font-weight:600; 
+      margin-bottom:0.5rem; 
+    }
+
+    .home-page-sub { 
+      color:#9d7fc4; 
+      font-size:13px; 
+    }
+
+    /* Stats Grid */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-top: 10px;
+    }
+
+    .stat-card {
+      background: #2d1054;
+      border: 0.5px solid #5c3d8f;
+      border-radius: 8px;
+      padding: 1.2rem 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      transition: border-color 0.2s, transform 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, #f5c518, #7b3fe4, #f5c518);
+      background-size: 200% 100%;
+      animation: shimmer 3s linear infinite;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .stat-card:hover::before {
+      opacity: 1;
+    }
+
+    .stat-card:hover {
+      border-color: rgba(245,197,24,0.4);
+      transform: translateY(-2px);
+    }
+
+    .stat-icon {
+      font-size: 28px;
+      color: #f5c518;
+      margin-bottom: 2px;
+    }
+
+    .stat-label {
+      color: #9d7fc4;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .stat-value {
+      color: #f0e6ff;
+      font-size: 28px;
+      font-weight: 700;
+    }
+
+    .stat-value.loading {
+      animation: pulseGlow 1s ease-in-out infinite;
+      opacity: 0.6;
+    }
+
+    .stat-change {
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .stat-change.up {
+      color: #4ade80;
+    }
+
+    .stat-change.down {
+      color: #f87171;
+    }
+
+    /* Panel */
+    .panel {
+      background: #2d1054;
+      border: 0.5px solid #5c3d8f;
+      border-radius: 8px;
+      padding: 1.4rem;
+      margin-top: 10px;
+    }
+
+    .panel-title {
+      color: #f5c518;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 1rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* Order Table */
+    .order-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .order-table th {
+      background: rgba(245,197,24,0.1);
+      color: #f5c518;
+      font-size: 12px;
+      padding: 10px 14px;
+      text-align: left;
+      letter-spacing: 0.5px;
+      font-weight: 600;
+    }
+
+    .order-table td {
+      color: #c9aff0;
+      font-size: 13px;
+      padding: 10px 14px;
+      border-top: 0.5px solid #3d1a6e;
+    }
+
+    .order-table tr:hover td {
+      background: rgba(245,197,24,0.04);
+    }
+
+    .order-table .empty-row td {
+      text-align: center;
+      color: #6b4d8a;
+      padding: 2rem;
+    }
+
+    /* Status Badges */
+    .status-badge {
+      display: inline-block;
+      padding: 3px 12px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .status-badge.completed {
+      background: rgba(74, 222, 128, 0.15);
+      color: #4ade80;
+      border: 0.5px solid rgba(74, 222, 128, 0.3);
+    }
+
+    .status-badge.pending {
+      background: rgba(245, 197, 24, 0.15);
+      color: #f5c518;
+      border: 0.5px solid rgba(245, 197, 24, 0.3);
+    }
+
+    .status-badge.in-progress {
+      background: rgba(96, 165, 250, 0.15);
+      color: #60a5fa;
+      border: 0.5px solid rgba(96, 165, 250, 0.3);
+    }
+
+    .status-badge.cancelled {
+      background: rgba(248, 113, 113, 0.15);
+      color: #f87171;
+      border: 0.5px solid rgba(248, 113, 113, 0.3);
+    }
+
+    /* Toast */
+    .toast {
+      position:fixed;
+      bottom:20px;
+      right:20px;
+      padding:14px 24px;
+      border-radius:8px;
+      color:#fff;
+      font-size:14px;
+      font-weight:500;
+      z-index:1000;
+      opacity:0;
+      transform:translateY(20px);
+      transition:opacity 0.3s, transform 0.3s;
+      pointer-events:none;
+    }
+    .toast.show {
+      opacity:1;
+      transform:translateY(0);
+    }
+    .toast.success { background:#22c55e; }
+    .toast.error { background:#ef4444; }
+    .toast.info { background:#3b82f6; }
+
+    @media(max-width:768px) {
+      .sidebar { position:fixed; left:0; top:0; transform:translateX(-100%); }
+      .sidebar.open { transform:translateX(0); }
+      .hamburger { display:flex; }
+      .home-page { padding:1.5rem; padding-top:140px; }
+      .welcome-container { left: 20px; top: 70px; }
+      .welcome-box { padding: 20px 24px; min-width: auto; }
+      .welcome-greeting { font-size: 18px; }
+      .welcome-date { font-size: 16px; }
+      .stats-grid { grid-template-columns: 1fr 1fr; }
+      .order-table { font-size: 12px; }
+      .order-table th, .order-table td { padding: 8px 10px; }
+    }
+
+    @media(max-width:480px) {
+      .stats-grid { grid-template-columns: 1fr; }
+      .welcome-box { padding: 16px 20px; }
+      .welcome-greeting { font-size: 16px; }
+      .welcome-date { font-size: 14px; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="orb orb1"></div>
+  <div class="orb orb2"></div>
+  <div class="particles" id="particles"></div>
+  <div class="overlay" id="overlay" onclick="closeNav()"></div>
+
+  <button class="hamburger" onclick="toggleNav()" aria-label="Toggle menu">
+    <i class="ti ti-menu-2"></i>
+  </button>
+
+  <!-- ===== WELCOME BACK - TOP LEFT ===== -->
+  <div class="welcome-container">
+    <div class="welcome-box">
+      <div class="welcome-content">
+        <div class="welcome-greeting" id="welcomeMessage">Welcome back,</div>
+        <div class="welcome-date" id="currentDate">Today's Date</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SIDEBAR -->
+  <div class="sidebar" id="sidebar">
+    <img src="89072922_3028538593858631_7555063944310685696_n.jpg" alt="Rseven Logo" class="sidebar-logo" />
+    <div class="sidebar-name">RSEVEN</div>
+    <div class="sidebar-sub">Graphic Solution</div>
+    <div class="sidebar-divider"></div>
+    
+    <!-- ===== SIDEBAR NAVIGATION ===== -->
+    <div class="sidebar-nav">
+      <a class="nav-item active" href="homepage.html" onclick="setActive(this)">
+        <i class="ti ti-home" aria-hidden="true"></i> Home
+      </a>
+      <a class="nav-item" href="dashboard.html" onclick="setActive(this)">
+        <i class="ti ti-layout-dashboard" aria-hidden="true"></i> Dashboard
+      </a>
+      <a class="nav-item" href="inventory.html" onclick="setActive(this)">
+        <i class="ti ti-box" aria-hidden="true"></i> Inventory
+      </a>
+      <a class="nav-item" href="sales.html" onclick="setActive(this)">
+        <i class="ti ti-chart-bar" aria-hidden="true"></i> Sales Reports
+      </a>
+      <a class="nav-item" href="orders.html" onclick="setActive(this)">
+        <i class="ti ti-orders" aria-hidden="true"></i> Orders
+      </a>
+    </div>
+
+    <div class="sidebar-logout" onclick="handleLogout()">
+      <i class="ti ti-logout" aria-hidden="true"></i> Logout
+    </div>
+  </div>
+
+  <!-- ===== HOME PAGE CONTENT ===== -->
+  <main class="home-page" id="homepage">
+    <div class="home-page-header">Home Page</div>
+    <div class="home-page-sub">Welcome to your Rseven Home Page. Here's your overview.</div>
+
+    <!-- Stats Grid -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon"><i class="ti ti-shopping-cart"></i></div>
+        <div class="stat-label">Total Orders</div>
+        <div class="stat-value" id="totalOrders">0</div>
+        <div class="stat-change up">↑ Total orders</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon"><i class="ti ti-clock"></i></div>
+        <div class="stat-label">Pending Orders</div>
+        <div class="stat-value" id="pendingOrders">0</div>
+        <div class="stat-change down">Awaiting processing</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon"><i class="ti ti-package"></i></div>
+        <div class="stat-label">Completed Orders</div>
+        <div class="stat-value" id="completedOrders">0</div>
+        <div class="stat-change up">✓ Delivered</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon"><i class="ti ti-coin"></i></div>
+        <div class="stat-label">Total Revenue</div>
+        <div class="stat-value" id="totalRevenue">₱0.00</div>
+        <div class="stat-change up">↑ Total sales</div>
+      </div>
+    </div>
+
+    <!-- Recent Orders Table -->
+    <div class="panel">
+      <div class="panel-title"><i class="ti ti-file-invoice" style="margin-right:6px;"></i> Recent Orders</div>
+      <table class="order-table">
+        <thead>
+          <tr>
+            <th>Order</th>
+            <th>Client</th>
+            <th>Product</th>
+            <th>Status</th>
+            <th>Date</th>
+            <th>Total</th>
+          </tr>
+        </thead>
+        <tbody id="recentOrdersBody">
+          <tr class="empty-row">
+            <td colspan="6">Loading orders...</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </main>
+
+  <script>
+    // ============================================================
+    // SUPABASE CONFIGURATION
+    // ============================================================
+    const SUPABASE_URL = 'https://pxnmojyievkshwaklfzj.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB4bm1vanlpZXZrc2h3YWtsZnpqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIyNDQ1MTAsImV4cCI6MjA5NzgyMDUxMH0.UDC2eg76kA4YJKhlh6sLhdFubF7L_zwWsnJxKnUwOGQ';
+    
+    // Initialize Supabase client
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // ============================================================
+    // TOAST NOTIFICATION
+    // ============================================================
+    function showToast(message, type = 'info') {
+      const toast = document.createElement('div');
+      toast.className = `toast ${type}`;
+      toast.textContent = message;
+      document.body.appendChild(toast);
+      
+      setTimeout(() => toast.classList.add('show'), 10);
+      
+      setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 300);
+      }, 3000);
+    }
+
+    // ============================================================
+    // WELCOME BACK FUNCTIONALITY
+    // ============================================================
+    function getTimeBasedGreeting() {
+      const hour = new Date().getHours();
+      if (hour < 12) return 'Good Morning';
+      if (hour < 17) return 'Good Afternoon';
+      return 'Good Evening';
+    }
+
+    function formatDate(date) {
+      const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 
+                          'July', 'August', 'September', 'October', 'November', 'December'];
+      const day = date.getDate();
+      const suffix = (day > 3 && day < 21) ? 'th' : ['st','nd','rd'][day % 10 - 1] || 'th';
+      return `${monthNames[date.getMonth()]} ${day}${suffix}, ${date.getFullYear()}`;
+    }
+
+    function updateWelcomeMessage() {
+      const greeting = getTimeBasedGreeting();
+      const welcomeEl = document.getElementById('welcomeMessage');
+      if (welcomeEl) {
+        welcomeEl.textContent = `${greeting}!`;
+      }
+      
+      const dateEl = document.getElementById('currentDate');
+      if (dateEl) {
+        dateEl.textContent = formatDate(new Date());
+      }
+    }
+
+    // ============================================================
+    // LOAD HOME DATA FROM SUPABASE
+    // ============================================================
+    async function loadHomeData() {
+      try {
+        // Show loading states
+        document.getElementById('totalOrders').textContent = '...';
+        document.getElementById('pendingOrders').textContent = '...';
+        document.getElementById('completedOrders').textContent = '...';
+        document.getElementById('totalRevenue').textContent = '...';
+
+        // Fetch all orders from Supabase
+        const { data: orders, error } = await supabase
+          .from('orders')
+          .select('*')
+          .order('date', { ascending: false });
+
+        if (error) throw error;
+
+        // ============================================================
+        // CALCULATE STATISTICS
+        // ============================================================
+        const totalOrders = orders.length;
+        
+        // Pending orders: remarks = '50%' OR status = 'pending' OR status = 'in-progress'
+        const pendingOrders = orders.filter(o => 
+          o.remarks === '50%' || o.status === 'pending' || o.status === 'in-progress'
+        ).length;
+        
+        // Completed orders: remarks = 'Full Payment' OR status = 'completed'
+        const completedOrders = orders.filter(o => 
+          o.remarks === 'Full Payment' || o.status === 'completed'
+        ).length;
+
+        // Total Revenue: sum of all quantity * price
+        const totalRevenue = orders.reduce((sum, o) => sum + ((o.quantity || 0) * (o.price || 0)), 0);
+
+        // Update stats
+        document.getElementById('totalOrders').textContent = totalOrders;
+        document.getElementById('pendingOrders').textContent = pendingOrders;
+        document.getElementById('completedOrders').textContent = completedOrders;
+        document.getElementById('totalRevenue').textContent = '₱' + totalRevenue.toLocaleString('en-PH', { minimumFractionDigits: 2 });
+
+        // Update recent orders table
+        renderRecentOrders(orders);
+
+      } catch (error) {
+        console.error('Error loading home data:', error);
+        showToast('Error loading data: ' + error.message, 'error');
+        
+        // Show error in stats
+        document.getElementById('totalOrders').textContent = 'Error';
+        document.getElementById('pendingOrders').textContent = 'Error';
+        document.getElementById('completedOrders').textContent = 'Error';
+        document.getElementById('totalRevenue').textContent = 'Error';
+      }
+    }
+
+    // ============================================================
+    // RENDER RECENT ORDERS WITH STATUS
+    // ============================================================
+    function renderRecentOrders(orders) {
+      const tbody = document.getElementById('recentOrdersBody');
+      
+      if (!orders || orders.length === 0) {
+        tbody.innerHTML = '<tr class="empty-row"><td colspan="6">No orders found.</td></tr>';
+        return;
+      }
+
+      // Get only the 10 most recent orders
+      const recentOrders = orders.slice(0, 10);
+
+      let html = '';
+      recentOrders.forEach(order => {
+        const total = (order.quantity || 0) * (order.price || 0);
+        const displayDate = order.date || 'N/A';
+        
+        // ============================================================
+        // DETERMINE STATUS FROM DATABASE
+        // ============================================================
+        let status = order.status || 'pending';
+        let statusLabel = statusLabels[status] || 'Pending';
+        
+        // If no status field, use remarks
+        if (!order.status) {
+          if (order.remarks === 'Full Payment') {
+            status = 'completed';
+            statusLabel = 'Completed';
+          } else if (order.remarks === '50%') {
+            status = 'pending';
+            statusLabel = 'Pending';
+          }
+        }
+        
+        html += `
+          <tr>
+            <td>#${String(order.id).slice(-6)}</td>
+            <td>${escapeHtml(order.client_name || 'Unknown')}</td>
+            <td style="font-size:12px; color:#9d7fc4;">${escapeHtml(order.product || '')} (${order.quantity || 0}x)</td>
+            <td><span class="status-badge ${status}">${statusLabel}</span></td>
+            <td>${escapeHtml(displayDate)}</td>
+            <td>₱${total.toLocaleString('en-PH', { minimumFractionDigits: 2 })}</td>
+          </tr>
+        `;
+      });
+
+      tbody.innerHTML = html;
+    }
+
+    // ============================================================
+    // STATUS LABELS
+    // ============================================================
+    const statusLabels = {
+      pending: 'Pending',
+      'in-progress': 'In Progress',
+      completed: 'Completed',
+      cancelled: 'Cancelled'
+    };
+
+    // ============================================================
+    // UTILITY FUNCTIONS
+    // ============================================================
+    function escapeHtml(text) {
+      if (!text) return '';
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    function setActive(el) {
+      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+      el.classList.add('active');
+    }
+
+    function toggleNav() {
+      document.getElementById('sidebar').classList.toggle('open');
+      document.getElementById('overlay').classList.toggle('open');
+    }
+
+    function closeNav() {
+      document.getElementById('sidebar').classList.remove('open');
+      document.getElementById('overlay').classList.remove('open');
+    }
+
+    function handleLogout() {
+      sessionStorage.removeItem('username');
+      window.location.href = 'login page.html';
+    }
+
+    // ============================================================
+    // PARTICLES
+    // ============================================================
+    function createParticles() {
+      const container = document.getElementById('particles');
+      for (let i = 0; i < 18; i++) {
+        const p = document.createElement('div');
+        p.className = 'particle';
+        p.style.cssText = `left:${Math.random()*100}%;top:${Math.random()*100}%;opacity:${0.1+Math.random()*0.2};animation:fadeUp ${2+Math.random()*3}s ease-in-out ${Math.random()*4}s infinite alternate;`;
+        container.appendChild(p);
+      }
+    }
+
+    // ============================================================
+    // EVENT BINDINGS
+    // ============================================================
+    document.addEventListener('DOMContentLoaded', () => {
+      // Initialize particles
+      createParticles();
+      
+      // Update welcome message
+      updateWelcomeMessage();
+      
+      // Load home data
+      loadHomeData();
+
+      // Auto-refresh every 30 seconds
+      setInterval(loadHomeData, 30000);
+    });
+
+    // Close modal on overlay click
+    document.getElementById('overlay').addEventListener('click', closeNav);
+  </script>
+</body>
+</html>

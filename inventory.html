@@ -1,0 +1,1182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Rseven · Inventory with Monthly Reports</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css" />
+  <!-- SheetJS for Excel export -->
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
+  <!-- Supabase SDK -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: #1a0a2e;
+      min-height: 100vh;
+      display: flex;
+      overflow-x: hidden;
+      color: #f0e6ff;
+    }
+
+    /* ===== SIDEBAR ===== */
+    .sidebar {
+      width: 260px; min-width:260px; height:100vh;
+      background: #2d1054;
+      border-right: 0.5px solid #5c3d8f;
+      display:flex; flex-direction:column; align-items:center;
+      padding: 2rem 0 1.5rem;
+      position: relative; z-index:20;
+      transition: transform 0.35s cubic-bezier(.4,0,.2,1);
+      animation: slideIn 0.5s ease both;
+    }
+    @keyframes slideIn { from{ transform:translateX(-100%); opacity:0; } to{ transform:translateX(0); opacity:1; } }
+    .sidebar-logo {
+      width:100px; height:100px;
+      animation: float 3s ease-in-out infinite, pulse 2.5s ease-in-out infinite;
+      margin-bottom: 0.75rem;
+      object-fit: contain; border-radius:12px;
+    }
+    @keyframes float { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-5px); } }
+    @keyframes pulse { 0%,100% { box-shadow:0 0 0 0 rgba(245,197,24,0.4); } 50% { box-shadow:0 0 0 10px rgba(245,197,24,0); } }
+    .sidebar-name {
+      color:#f5c518; font-size:15px; font-weight:600; text-align:center;
+      letter-spacing:1px; line-height:1.5;
+      background: linear-gradient(90deg,#f5c518,#fff4a0,#f5c518);
+      background-size:200% auto;
+      -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+      animation: shimmer 3s linear infinite;
+    }
+    @keyframes shimmer { 0% { background-position:-200% center; } 100% { background-position:200% center; } }
+    .sidebar-sub { color:#9d7fc4; font-size:12px; text-align:center; margin-top:4px; }
+    .sidebar-divider { width:75%; height:0.5px; background:#5c3d8f; margin:1.2rem 0 1rem; }
+    .sidebar-nav { display:flex; flex-direction:column; width:100%; gap:4px; flex:1; padding:0 12px; }
+    .nav-item {
+      width:100%; padding:12px 16px;
+      color:#c9aff0; font-size:14px; font-weight:500;
+      cursor:pointer; border-radius:10px;
+      display:flex; align-items:center; gap:10px;
+      transition:background 0.2s, color 0.2s;
+      text-decoration:none;
+    }
+    .nav-item i { font-size:18px; }
+    .nav-item:hover { background:rgba(245,197,24,0.08); color:#f5c518; }
+    .nav-item.active { background:rgba(245,197,24,0.15); color:#f5c518; border:0.5px solid rgba(245,197,24,0.3); }
+    .sidebar-logout {
+      width:calc(100% - 24px); margin:0 12px;
+      padding:12px 16px; color:#e24b4a; font-size:14px; font-weight:500;
+      cursor:pointer; border-radius:10px;
+      display:flex; align-items:center; gap:10px;
+      transition:background 0.2s;
+      border:0.5px solid rgba(226,75,74,0.3);
+    }
+    .sidebar-logout i { font-size:18px; }
+    .sidebar-logout:hover { background:rgba(226,75,74,0.1); }
+
+    /* Hamburger for mobile */
+    .hamburger {
+      display:none;
+      position:fixed;
+      top:16px;
+      left:16px;
+      z-index:30;
+      background:#2d1054;
+      border:0.5px solid #5c3d8f;
+      border-radius:8px;
+      padding:8px 10px;
+      cursor:pointer;
+      color:#f5c518;
+    }
+    .hamburger i { font-size:22px; }
+    .overlay {
+      display:none;
+      position:fixed;
+      inset:0;
+      background:rgba(0,0,0,0.5);
+      z-index:10;
+    }
+    .overlay.open { display:block; }
+
+    /* ===== MAIN ===== */
+    .main {
+      flex:1;
+      min-height: 100vh;
+      padding: 2rem 2rem 2rem 2rem;
+      display:flex;
+      flex-direction:column;
+      gap:1.8rem;
+      position:relative;
+      z-index:1;
+    }
+    .page-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+      border-bottom: 0.5px solid #3d1a6e;
+      padding-bottom: 0.75rem;
+    }
+    .page-header h1 {
+      color: #f5c518;
+      font-weight: 600;
+      font-size: 24px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .page-header h1 i { font-size: 28px; }
+    .page-header .sub {
+      color: #9d7fc4;
+      font-size: 14px;
+    }
+    .header-actions {
+      display:flex; 
+      gap:10px; 
+      flex-wrap:wrap;
+      align-items:center;
+    }
+
+    /* ===== INVENTORY CONTROLS ===== */
+    .inventory-controls {
+      background: #2d1054;
+      border: 0.5px solid #5c3d8f;
+      border-radius: 12px;
+      padding: 1.5rem 2rem;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-end;
+      gap: 1.2rem 2rem;
+    }
+    .control-group {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      flex: 1 0 160px;
+    }
+    .control-group label {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #9d7fc4;
+      font-weight: 600;
+    }
+    .control-group input, 
+    .control-group select {
+      background: #1a0a2e;
+      border: 0.5px solid #5c3d8f;
+      border-radius: 8px;
+      padding: 10px 14px;
+      color: #f0e6ff;
+      font-size: 14px;
+      outline: none;
+      transition: border 0.2s, box-shadow 0.2s;
+      width: 100%;
+    }
+    .control-group input:focus, 
+    .control-group select:focus {
+      border-color: #f5c518;
+      box-shadow: 0 0 0 3px rgba(245,197,24,0.15);
+    }
+    .control-group input::placeholder { color: #6b4b8a; }
+    .btn {
+      background: #f5c518;
+      border: none;
+      border-radius: 8px;
+      padding: 10px 24px;
+      font-weight: 600;
+      font-size: 14px;
+      color: #1a0a2e;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: transform 0.15s, box-shadow 0.2s;
+      box-shadow: 0 2px 8px rgba(245,197,24,0.2);
+      white-space: nowrap;
+    }
+    .btn:hover { transform: scale(0.97); box-shadow: 0 2px 12px rgba(245,197,24,0.3); }
+    .btn i { font-size: 18px; }
+    .btn-outline {
+      background: transparent;
+      border: 0.5px solid #5c3d8f;
+      color: #c9aff0;
+      box-shadow: none;
+    }
+    .btn-outline:hover { background: rgba(245,197,24,0.05); border-color: #f5c518; color: #f5c518; }
+    .btn-success {
+      background: #22c55e;
+      color: #fff;
+      box-shadow: 0 2px 8px rgba(34,197,94,0.3);
+    }
+    .btn-success:hover { box-shadow: 0 2px 12px rgba(34,197,94,0.5); }
+    .btn-danger {
+      background: #ef4444;
+      color: #fff;
+      box-shadow: 0 2px 8px rgba(239,68,68,0.3);
+    }
+    .btn-danger:hover { box-shadow: 0 2px 12px rgba(239,68,68,0.5); }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .loading-spinner {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border: 2px solid #1a0a2e;
+      border-radius: 50%;
+      border-top-color: transparent;
+      animation: spin 0.6s linear infinite;
+    }
+    .loading-spinner-white {
+      border: 2px solid #fff;
+      border-top-color: transparent;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Toast notification */
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      padding: 14px 24px;
+      border-radius: 8px;
+      color: #fff;
+      font-size: 14px;
+      font-weight: 500;
+      z-index: 1000;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 0.3s, transform 0.3s;
+      pointer-events: none;
+    }
+    .toast.show { opacity: 1; transform: translateY(0); }
+    .toast.success { background: #22c55e; }
+    .toast.error { background: #ef4444; }
+    .toast.info { background: #3b82f6; }
+
+    /* ===== TABLES ===== */
+    .table-wrap {
+      background: #2d1054;
+      border: 0.5px solid #5c3d8f;
+      border-radius: 12px;
+      overflow-x: auto;
+      padding: 0.2rem 0;
+    }
+    .inventory-table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 600px;
+    }
+    .inventory-table th {
+      background: rgba(245,197,24,0.08);
+      color: #f5c518;
+      font-size: 12px;
+      padding: 14px 16px;
+      text-align: left;
+      letter-spacing: 0.5px;
+      font-weight: 600;
+      border-bottom: 0.5px solid #3d1a6e;
+    }
+    .inventory-table td {
+      color: #c9aff0;
+      font-size: 14px;
+      padding: 14px 16px;
+      border-bottom: 0.5px solid #3d1a6e;
+      vertical-align: middle;
+    }
+    .inventory-table tr:last-child td { border-bottom: none; }
+    .inventory-table tr:hover td { background: rgba(245,197,24,0.04); }
+
+    .badge-stock {
+      display: inline-block;
+      padding: 2px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+    .badge-stock.high { background: rgba(74,222,128,0.15); color: #4ade80; border: 0.5px solid rgba(74,222,128,0.2); }
+    .badge-stock.medium { background: rgba(245,197,24,0.15); color: #f5c518; border: 0.5px solid rgba(245,197,24,0.2); }
+    .badge-stock.low { background: rgba(248,113,113,0.15); color: #f87171; border: 0.5px solid rgba(248,113,113,0.2); }
+
+    .action-btns {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .action-btns .btn-sm {
+      background: transparent;
+      border: 0.5px solid #5c3d8f;
+      border-radius: 6px;
+      padding: 4px 10px;
+      color: #c9aff0;
+      font-size: 12px;
+      cursor: pointer;
+      transition: 0.15s;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .action-btns .btn-sm:hover { border-color: #f5c518; color: #f5c518; background: rgba(245,197,24,0.05); }
+    .action-btns .btn-sm.danger:hover { border-color: #f87171; color: #f87171; background: rgba(248,113,113,0.05); }
+    .action-btns .btn-sm:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .empty-state {
+      text-align: center;
+      padding: 3rem 1rem;
+      color: #6b4b8a;
+      font-size: 15px;
+    }
+    .empty-state i { font-size: 48px; display: block; margin-bottom: 12px; opacity: 0.5; }
+
+    /* ===== REPORT SECTION ===== */
+    .report-section {
+      background: #2d1054;
+      border: 0.5px solid #5c3d8f;
+      border-radius: 12px;
+      padding: 1.5rem 2rem;
+    }
+    .report-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin-bottom: 1.2rem;
+    }
+    .report-header h2 {
+      color: #f5c518;
+      font-size: 18px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .report-header h2 i { font-size: 22px; }
+    .report-controls {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .report-controls select,
+    .report-controls input {
+      background: #1a0a2e;
+      border: 0.5px solid #5c3d8f;
+      border-radius: 8px;
+      padding: 8px 14px;
+      color: #f0e6ff;
+      font-size: 13px;
+      outline: none;
+    }
+    .report-controls select:focus,
+    .report-controls input:focus {
+      border-color: #f5c518;
+    }
+    .report-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    .report-table th {
+      background: rgba(245,197,24,0.06);
+      color: #f5c518;
+      padding: 10px 12px;
+      text-align: left;
+      border-bottom: 0.5px solid #3d1a6e;
+      font-weight: 500;
+    }
+    .report-table td {
+      padding: 10px 12px;
+      border-bottom: 0.5px solid #3d1a6e;
+      color: #c9aff0;
+    }
+    .report-table tr:last-child td { border-bottom: none; }
+    .report-table .positive { color: #4ade80; }
+    .report-table .negative { color: #f87171; }
+    .report-table .neutral { color: #f5c518; }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width:768px) {
+      .sidebar { position:fixed; left:0; top:0; transform:translateX(-100%); }
+      .sidebar.open { transform:translateX(0); }
+      .hamburger { display:flex; }
+      .overlay.open { display:block; }
+      .main { padding:1.5rem; padding-top: 4.5rem; }
+      .inventory-controls { flex-direction: column; align-items: stretch; }
+      .control-group { flex: 1 1 auto; }
+      .page-header { flex-direction: column; align-items: flex-start; }
+      .report-header { flex-direction: column; align-items: flex-start; }
+      .header-actions { width:100%; }
+      .toast { bottom:10px; right:10px; left:10px; text-align:center; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Hamburger -->
+  <button class="hamburger" onclick="toggleNav()" aria-label="Toggle menu">
+    <i class="ti ti-menu-2"></i>
+  </button>
+  <div class="overlay" id="overlay" onclick="closeNav()"></div>
+
+  <!-- SIDEBAR -->
+  <div class="sidebar" id="sidebar">
+    <img src="89072922_3028538593858631_7555063944310685696_n.jpg" alt="Rseven Logo" class="sidebar-logo" />
+    <div class="sidebar-name">RSEVEN</div>
+    <div class="sidebar-sub">Graphic Solution</div>
+    <div class="sidebar-divider"></div>
+    <div class="sidebar-nav">
+      <a class="nav-item" href="homepage.html"><i class="ti ti-home"></i> Home</a>
+      <a class="nav-item" href="dashboard.html"><i class="ti ti-layout-dashboard"></i> Dashboard</a>
+      <a class="nav-item active" href="inventory.html"><i class="ti ti-box"></i> Inventory</a>
+      <a class="nav-item" href="sales.html"><i class="ti ti-chart-bar"></i> Sales Reports</a>
+      <a class="nav-item" href="orders.html"><i class="ti ti-orders"></i> Orders</a>
+    </div>
+    <div class="sidebar-logout" onclick="handleLogout()"><i class="ti ti-logout"></i> Logout</div>
+  </div>
+
+  <!-- ===== MAIN CONTENT ===== -->
+  <main class="main" id="main">
+    <!-- page header -->
+    <div class="page-header">
+      <div>
+        <h1><i class="ti ti-box"></i> Inventory Management</h1>
+        <div class="sub">Add items, adjust stock, view monthly reports.</div>
+      </div>
+      <div class="header-actions">
+        <button class="btn" id="addItemBtn"><i class="ti ti-plus"></i> Add Item</button>
+      </div>
+    </div>
+
+    <!-- ===== INVENTORY FORM ===== -->
+    <div class="inventory-controls" id="inventoryForm">
+      <div class="control-group">
+        <label for="itemName">Item name</label>
+        <input type="text" id="itemName" placeholder="e.g. A4 Paper" />
+      </div>
+      <div class="control-group">
+        <label for="itemQty">Quantity</label>
+        <input type="number" id="itemQty" placeholder="0" min="0" step="1" />
+      </div>
+      <div class="control-group">
+        <label for="itemCategory">Category</label>
+        <select id="itemCategory">
+          <option value="">Select category</option>
+          <option value="Sticker">Sticker</option>
+          <option value="Tarpaulin">Tarpaulin</option>
+          <option value="A5 Paper">A5 Paper</option>
+          <option value="A4 Paper">A4 Paper</option>
+        </select>
+      </div>
+      <div class="control-group" style="flex:0 0 auto; justify-content:flex-end;">
+        <button class="btn" id="saveItemBtn"><i class="ti ti-device-floppy"></i> Save</button>
+        <button class="btn btn-outline" id="cancelEditBtn" style="display:none;"><i class="ti ti-x"></i> Cancel</button>
+      </div>
+    </div>
+
+    <!-- ===== INVENTORY TABLE ===== -->
+    <div class="table-wrap">
+      <table class="inventory-table" id="inventoryTable">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Item</th>
+            <th>Category</th>
+            <th>Quantity</th>
+            <th>Stock level</th>
+            <th style="text-align:right;">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="inventoryBody">
+          <!-- rows injected by JS -->
+        </tbody>
+      </table>
+      <div class="empty-state" id="emptyState">
+        <i class="ti ti-box"></i>
+        Loading inventory...
+      </div>
+    </div>
+
+    <!-- summary -->
+    <div style="color:#6b4b8a; font-size:13px; display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px;">
+      <span id="itemCount">0 items</span>
+      <span id="totalQty">Total: 0 units</span>
+    </div>
+
+    <!-- ===== MONTHLY REPORT ===== -->
+    <div class="report-section" id="reportSection">
+      <div class="report-header">
+        <h2><i class="ti ti-report"></i> Monthly Report</h2>
+        <div class="report-controls">
+          <label style="font-size:12px; color:#9d7fc4;">Month:</label>
+          <input type="month" id="reportMonth" />
+          <button class="btn btn-outline" id="refreshReportBtn" style="padding:6px 16px; font-size:13px;">
+            <i class="ti ti-refresh"></i> Refresh
+          </button>
+          <button class="btn btn-success" id="exportReportBtn" style="padding:6px 16px; font-size:13px;">
+            <i class="ti ti-file-spreadsheet"></i> Export Report
+          </button>
+        </div>
+      </div>
+      <div style="overflow-x:auto;">
+        <table class="report-table" id="reportTable">
+          <thead>
+            <tr>
+              <th>Item</th>
+              <th>Category</th>
+              <th>Starting Qty</th>
+              <th>Ending Qty</th>
+              <th>Net Change</th>
+              <th>Adjustments</th>
+            </tr>
+          </thead>
+          <tbody id="reportBody">
+            <!-- rows injected -->
+          </tbody>
+        </table>
+      </div>
+      <div class="empty-state" id="reportEmpty" style="padding:1.5rem; font-size:14px;">
+        <i class="ti ti-file" style="font-size:32px;"></i>
+        No data for this month. Adjust stock to generate reports.
+      </div>
+    </div>
+  </main>
+
+  <script>
+    // ============================================================
+    // SUPABASE CONFIGURATION
+    // ============================================================
+    const SUPABASE_URL = 'https://pxnmojyievkshwaklfzj.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB4bm1vanlpZXZrc2h3YWtsZnpqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIyNDQ1MTAsImV4cCI6MjA5NzgyMDUxMH0.UDC2eg76kA4YJKhlh6sLhdFubF7L_zwWsnJxKnUwOGQ';
+    
+    // Initialize Supabase client
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  
+
+    // ============================================================
+    // TOAST NOTIFICATION
+    // ============================================================
+    function showToast(message, type = 'info') {
+      let toast = document.getElementById('toast');
+      if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'toast';
+        toast.className = 'toast';
+        document.body.appendChild(toast);
+      }
+      toast.textContent = message;
+      toast.className = 'toast ' + type;
+      setTimeout(() => toast.classList.add('show'), 10);
+      clearTimeout(toast._hide);
+      toast._hide = setTimeout(() => toast.classList.remove('show'), 3500);
+    }
+
+    // ============================================================
+    // NAVIGATION
+    // ============================================================
+    function toggleNav() {
+      document.getElementById('sidebar').classList.toggle('open');
+      document.getElementById('overlay').classList.toggle('open');
+    }
+
+    function closeNav() {
+      document.getElementById('sidebar').classList.remove('open');
+      document.getElementById('overlay').classList.remove('open');
+    }
+
+    function handleLogout() {
+      if (confirm('Logout?')) {
+        sessionStorage.removeItem('username');
+        window.location.href = 'login page.html';
+      }
+    }
+
+    // ============================================================
+    // MAIN APPLICATION
+    // ============================================================
+    (function() {
+      "use strict";
+
+      // ----- DATA -----
+      let inventory = [];
+      let transactionLog = [];
+      let editingId = null;
+
+      // ----- DOM refs -----
+      const tbody = document.getElementById('inventoryBody');
+      const emptyState = document.getElementById('emptyState');
+      const itemName = document.getElementById('itemName');
+      const itemQty = document.getElementById('itemQty');
+      const itemCategory = document.getElementById('itemCategory');
+      const saveBtn = document.getElementById('saveItemBtn');
+      const cancelBtn = document.getElementById('cancelEditBtn');
+      const addBtn = document.getElementById('addItemBtn');
+      const itemCountSpan = document.getElementById('itemCount');
+      const totalQtySpan = document.getElementById('totalQty');
+
+      // Report
+      const reportMonth = document.getElementById('reportMonth');
+      const refreshReportBtn = document.getElementById('refreshReportBtn');
+      const exportReportBtn = document.getElementById('exportReportBtn');
+      const reportBody = document.getElementById('reportBody');
+      const reportEmpty = document.getElementById('reportEmpty');
+
+      // ----- helpers -----
+      function stockLevel(qty) {
+        if (qty > 50) return 'high';
+        if (qty > 10) return 'medium';
+        return 'low';
+      }
+
+      function stockLabel(qty) {
+        const map = { high: 'High', medium: 'Medium', low: 'Low' };
+        return map[stockLevel(qty)] || 'Low';
+      }
+
+      function getCurrentMonth() {
+        const d = new Date();
+        return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+      }
+
+      function escapeHtml(str) {
+        if (!str) return '';
+        return str.replace(/[&<>"]/g, function(m) {
+          if (m === '&') return '&amp;';
+          if (m === '<') return '&lt;';
+          if (m === '>') return '&gt;';
+          if (m === '"') return '&quot;';
+          return m;
+        });
+      }
+
+      // ============================================================
+      // LOAD DATA FROM SUPABASE
+      // ============================================================
+      async function loadInventory() {
+        try {
+          emptyState.innerHTML = '<i class="ti ti-box"></i> Loading inventory...';
+
+          // Load inventory items
+          const { data: items, error: itemsError } = await supabase
+            .from('inventory')
+            .select('*')
+            .order('name');
+
+          if (itemsError) throw itemsError;
+
+          inventory = items || [];
+          render();
+
+          // Load transactions for the current month
+          const currentMonth = getCurrentMonth();
+          const { data: transactions, error: transError } = await supabase
+            .from('inventory_transactions')
+            .select('*')
+            .eq('month', currentMonth);
+
+          if (transError) throw transError;
+
+          transactionLog = transactions || [];
+          renderReport();
+
+          showToast('Inventory loaded successfully!', 'success');
+        } catch (error) {
+          console.error('Error loading inventory:', error);
+          emptyState.innerHTML = '<i class="ti ti-box"></i> Error loading inventory. Please refresh.';
+          showToast('Error loading inventory: ' + error.message, 'error');
+        }
+      }
+
+      // ============================================================
+      // SAVE ITEM TO SUPABASE
+      // ============================================================
+      async function saveItem() {
+        const name = itemName.value.trim();
+        const qty = parseInt(itemQty.value, 10);
+        const category = itemCategory.value;
+
+        if (!name) { alert('Please enter an item name.'); itemName.focus(); return; }
+        if (isNaN(qty) || qty < 0) { alert('Quantity must be a non-negative number.'); itemQty.focus(); return; }
+        if (!category) { alert('Please select a category.'); itemCategory.focus(); return; }
+
+        saveBtn.disabled = true;
+        saveBtn.innerHTML = '<span class="loading-spinner"></span> Saving...';
+
+        try {
+          if (editingId) {
+            // UPDATE existing item
+            const oldItem = inventory.find(it => it.id === editingId);
+            if (!oldItem) throw new Error('Item not found');
+
+            const delta = qty - (oldItem.quantity || 0);
+
+            const { error } = await supabase
+              .from('inventory')
+              .update({ 
+                name: name, 
+                quantity: qty, 
+                category: category,
+                updated_at: new Date().toISOString()
+              })
+              .eq('id', editingId);
+
+            if (error) throw error;
+
+            // Log transaction if quantity changed
+            if (delta !== 0) {
+              await logTransaction(editingId, delta, 'adjusted via edit', qty);
+            }
+
+            cancelEdit();
+            showToast('Item updated successfully!', 'success');
+          } else {
+            // INSERT new item
+            const { data, error } = await supabase
+              .from('inventory')
+              .insert([{ name, quantity: qty, category }])
+              .select();
+
+            if (error) throw error;
+
+            const newItem = data[0];
+            inventory.push(newItem);
+
+            // Log transaction if quantity > 0
+            if (qty > 0) {
+              await logTransaction(newItem.id, qty, 'new item added', qty);
+            }
+
+            clearForm();
+            showToast('Item added successfully!', 'success');
+          }
+
+          await loadInventory();
+
+        } catch (error) {
+          console.error('Error saving item:', error);
+          showToast('Error saving item: ' + error.message, 'error');
+        } finally {
+          saveBtn.disabled = false;
+          saveBtn.innerHTML = '<i class="ti ti-device-floppy"></i> Save';
+        }
+      }
+
+      // ============================================================
+      // LOG TRANSACTION TO SUPABASE
+      // ============================================================
+      async function logTransaction(itemId, change, note, qtyAfter) {
+        const month = getCurrentMonth();
+        
+        const { data, error } = await supabase
+          .from('inventory_transactions')
+          .insert([{
+            item_id: itemId,
+            month: month,
+            change_amount: change,
+            note: note || (change > 0 ? 'added' : 'removed'),
+            qty_after: qtyAfter
+          }])
+          .select();
+
+        if (error) {
+          console.error('Error logging transaction:', error);
+          throw error;
+        }
+
+        transactionLog.push(data[0]);
+        return data[0];
+      }
+
+      // ============================================================
+      // DELETE ITEM FROM SUPABASE
+      // ============================================================
+      async function deleteItem(id) {
+        const item = inventory.find(it => it.id === id);
+        if (!item) return;
+
+        if (!confirm(`Delete "${item.name}" ?`)) return;
+
+        const delBtn = document.querySelector(`[data-id="${id}"][data-action="delete"]`);
+        if (delBtn) {
+          delBtn.disabled = true;
+          delBtn.innerHTML = '<span class="loading-spinner" style="width:12px;height:12px;"></span>';
+        }
+
+        try {
+          // Log deletion if quantity > 0
+          if (item.quantity > 0) {
+            await logTransaction(id, -item.quantity, 'deleted item', 0);
+          }
+
+          const { error } = await supabase
+            .from('inventory')
+            .delete()
+            .eq('id', id);
+
+          if (error) throw error;
+
+          inventory = inventory.filter(it => it.id !== id);
+          if (editingId === id) cancelEdit();
+
+          showToast('Deleted ' + item.name, 'info');
+          await loadInventory();
+
+        } catch (error) {
+          console.error('Error deleting item:', error);
+          showToast('Error deleting item: ' + error.message, 'error');
+          if (delBtn) {
+            delBtn.disabled = false;
+            delBtn.innerHTML = '<i class="ti ti-trash"></i> Delete';
+          }
+        }
+      }
+
+      // ============================================================
+      // ADJUST QUANTITY (+1 or -1)
+      // ============================================================
+      async function adjustQuantity(id, amount) {
+        const item = inventory.find(it => it.id === id);
+        if (!item) return;
+
+        const newQty = (item.quantity || 0) + amount;
+        if (newQty < 0) {
+          showToast('Quantity cannot be negative.', 'error');
+          return;
+        }
+
+        const btn = document.querySelector(`[data-id="${id}"][data-action="${amount > 0 ? 'addone' : 'removeone'}"]`);
+        if (btn) {
+          btn.disabled = true;
+          btn.innerHTML = '<span class="loading-spinner" style="width:12px;height:12px;"></span>';
+        }
+
+        try {
+          const { error } = await supabase
+            .from('inventory')
+            .update({ quantity: newQty })
+            .eq('id', id);
+
+          if (error) throw error;
+
+          await logTransaction(id, amount, amount > 0 ? 'manual +1' : 'manual -1', newQty);
+
+          showToast(`${amount > 0 ? 'Added' : 'Removed'} 1 from ${item.name}`, 'success');
+          await loadInventory();
+
+        } catch (error) {
+          console.error('Error adjusting quantity:', error);
+          showToast('Error adjusting quantity: ' + error.message, 'error');
+          if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = amount > 0 ? '<i class="ti ti-plus"></i> +1' : '<i class="ti ti-minus"></i> -1';
+          }
+        }
+      }
+
+      // ============================================================
+      // HANDLE ACTION
+      // ============================================================
+      function handleAction(id, action) {
+        const item = inventory.find(it => it.id === id);
+        if (!item) return;
+
+        switch (action) {
+          case 'adjust': {
+            editingId = id;
+            itemName.value = item.name;
+            itemQty.value = item.quantity;
+            itemCategory.value = item.category;
+            saveBtn.textContent = 'Update';
+            cancelBtn.style.display = 'inline-flex';
+            addBtn.disabled = true;
+            itemName.focus();
+            break;
+          }
+          case 'addone': {
+            adjustQuantity(id, 1);
+            break;
+          }
+          case 'removeone': {
+            adjustQuantity(id, -1);
+            break;
+          }
+          case 'delete': {
+            deleteItem(id);
+            break;
+          }
+          default: break;
+        }
+      }
+
+      // ============================================================
+      // RENDER TABLE
+      // ============================================================
+      function render() {
+        itemCountSpan.textContent = inventory.length + ' items';
+        const total = inventory.reduce((sum, it) => sum + (it.quantity || 0), 0);
+        totalQtySpan.textContent = 'Total: ' + total + ' units';
+
+        if (inventory.length === 0) {
+          tbody.innerHTML = '';
+          emptyState.style.display = 'block';
+          emptyState.innerHTML = '<i class="ti ti-box"></i> No items yet. Add your first supply using the form above.';
+          renderReport();
+          return;
+        }
+        emptyState.style.display = 'none';
+
+        let html = '';
+        inventory.forEach((item, index) => {
+          const level = stockLevel(item.quantity);
+          html += `
+            <tr>
+              <td>${index + 1}</td>
+              <td><strong>${escapeHtml(item.name)}</strong></td>
+              <td>${escapeHtml(item.category)}</td>
+              <td>${item.quantity}</td>
+              <td><span class="badge-stock ${level}">${stockLabel(item.quantity)}</span></td>
+              <td style="text-align:right;">
+                <div class="action-btns" style="justify-content:flex-end;">
+                  <button class="btn-sm" data-id="${item.id}" data-action="adjust"><i class="ti ti-edit"></i> Adjust</button>
+                  <button class="btn-sm" data-id="${item.id}" data-action="addone"><i class="ti ti-plus"></i> +1</button>
+                  <button class="btn-sm" data-id="${item.id}" data-action="removeone"><i class="ti ti-minus"></i> -1</button>
+                  <button class="btn-sm danger" data-id="${item.id}" data-action="delete"><i class="ti ti-trash"></i> Delete</button>
+                </div>
+              </td>
+            </tr>
+          `;
+        });
+        tbody.innerHTML = html;
+
+        tbody.querySelectorAll('[data-action]').forEach(btn => {
+          btn.addEventListener('click', function(e) {
+            const id = this.dataset.id;
+            const action = this.dataset.action;
+            handleAction(id, action);
+          });
+        });
+
+        renderReport();
+      }
+
+      // ============================================================
+      // CANCEL EDIT
+      // ============================================================
+      function cancelEdit() {
+        editingId = null;
+        saveBtn.textContent = 'Save';
+        cancelBtn.style.display = 'none';
+        addBtn.disabled = false;
+        clearForm();
+        render();
+      }
+
+      function clearForm() {
+        itemName.value = '';
+        itemQty.value = '';
+        itemCategory.value = '';
+      }
+
+      // ============================================================
+      // REPORT FUNCTIONS
+      // ============================================================
+      function getReportData() {
+        const month = reportMonth.value || getCurrentMonth();
+        const monthLogs = transactionLog.filter(log => log.month === month);
+        
+        const reportData = {};
+        inventory.forEach(it => {
+          reportData[it.id] = {
+            item: it,
+            startingQty: it.quantity,
+            endingQty: it.quantity,
+            adjustments: [],
+            netChange: 0
+          };
+        });
+
+        monthLogs.forEach(log => {
+          const entry = reportData[log.item_id];
+          if (entry) {
+            entry.adjustments.push(log);
+            entry.netChange += log.change_amount;
+          }
+        });
+
+        Object.keys(reportData).forEach(key => {
+          const d = reportData[key];
+          d.startingQty = d.endingQty - d.netChange;
+        });
+
+        return Object.values(reportData);
+      }
+
+      function renderReport() {
+        const rows = getReportData();
+        
+        if (rows.length === 0) {
+          reportBody.innerHTML = '';
+          reportEmpty.style.display = 'block';
+          return;
+        }
+        reportEmpty.style.display = 'none';
+
+        let html = '';
+        rows.forEach(d => {
+          const net = d.netChange;
+          let netClass = 'neutral';
+          let netSymbol = '±';
+          if (net > 0) { netClass = 'positive'; netSymbol = '+'; }
+          else if (net < 0) { netClass = 'negative'; netSymbol = ''; }
+
+          const grouped = {};
+          d.adjustments.forEach(a => {
+            const key = a.note || (a.change_amount > 0 ? 'added' : 'removed');
+            if (!grouped[key]) grouped[key] = 0;
+            grouped[key] += a.change_amount;
+          });
+
+          const adjSummary = Object.keys(grouped).map(key => {
+            const val = grouped[key];
+            return (val > 0 ? '+' : '') + val + ' ' + key;
+          }).join(', ') || '—';
+
+          html += `
+            <tr>
+              <td>${escapeHtml(d.item.name)}</td>
+              <td>${escapeHtml(d.item.category)}</td>
+              <td>${d.startingQty}</td>
+              <td>${d.endingQty}</td>
+              <td class="${netClass}">${netSymbol}${net}</td>
+              <td style="font-size:12px; color:#9d7fc4;">${escapeHtml(adjSummary)}</td>
+            </tr>
+          `;
+        });
+        reportBody.innerHTML = html;
+      }
+
+      // ============================================================
+      // EXPORT REPORT TO EXCEL
+      // ============================================================
+      function exportReportToExcel() {
+        const rows = getReportData();
+        if (rows.length === 0) {
+          alert('No report data to export for this month.');
+          return;
+        }
+
+        const data = rows.map(d => {
+          const grouped = {};
+          d.adjustments.forEach(a => {
+            const key = a.note || (a.change_amount > 0 ? 'added' : 'removed');
+            if (!grouped[key]) grouped[key] = 0;
+            grouped[key] += a.change_amount;
+          });
+          const adjSummary = Object.keys(grouped).map(key => {
+            const val = grouped[key];
+            return (val > 0 ? '+' : '') + val + ' ' + key;
+          }).join(', ') || '—';
+
+          return {
+            'Item': d.item.name,
+            'Category': d.item.category,
+            'Starting Qty': d.startingQty,
+            'Ending Qty': d.endingQty,
+            'Net Change': d.netChange,
+            'Adjustments': adjSummary
+          };
+        });
+
+        const wb = XLSX.utils.book_new();
+        const ws = XLSX.utils.json_to_sheet(data);
+        XLSX.utils.book_append_sheet(wb, ws, 'Monthly Report');
+        
+        const colWidths = [
+          { wch: 25 },  // Item
+          { wch: 15 },  // Category
+          { wch: 12 },  // Starting Qty
+          { wch: 12 },  // Ending Qty
+          { wch: 12 },  // Net Change
+          { wch: 35 }   // Adjustments
+        ];
+        ws['!cols'] = colWidths;
+
+        const month = reportMonth.value || getCurrentMonth();
+        XLSX.writeFile(wb, `Monthly_Report_${month}.xlsx`);
+        showToast('Report exported successfully!', 'success');
+      }
+
+      // ============================================================
+      // LOAD TRANSACTIONS FOR MONTH
+      // ============================================================
+      async function loadTransactionsForMonth(month) {
+        try {
+          const { data, error } = await supabase
+            .from('inventory_transactions')
+            .select('*')
+            .eq('month', month);
+
+          if (error) throw error;
+
+          transactionLog = data || [];
+          renderReport();
+        } catch (error) {
+          console.error('Error loading transactions:', error);
+          showToast('Error loading transactions: ' + error.message, 'error');
+        }
+      }
+
+      // ============================================================
+      // EVENT BINDINGS
+      // ============================================================
+      saveBtn.addEventListener('click', saveItem);
+      cancelBtn.addEventListener('click', cancelEdit);
+      addBtn.addEventListener('click', function() {
+        if (editingId) cancelEdit();
+        itemName.focus();
+      });
+
+      refreshReportBtn.addEventListener('click', function() {
+        const month = reportMonth.value || getCurrentMonth();
+        loadTransactionsForMonth(month);
+      });
+
+      reportMonth.addEventListener('change', function() {
+        const month = this.value || getCurrentMonth();
+        loadTransactionsForMonth(month);
+      });
+
+      exportReportBtn.addEventListener('click', exportReportToExcel);
+
+      document.getElementById('itemName').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') { e.preventDefault(); document.getElementById('itemQty').focus(); }
+      });
+      document.getElementById('itemQty').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') { e.preventDefault(); saveItem(); }
+      });
+
+      // Close overlay on click
+      document.getElementById('overlay').addEventListener('click', closeNav);
+
+      // ============================================================
+      // INIT
+      // ============================================================
+      // Set default month
+      reportMonth.value = getCurrentMonth();
+
+      // Load initial data
+      loadInventory();
+
+      // Auto-refresh every 60 seconds
+      setInterval(loadInventory, 60000);
+
+    })();
+  </script>
+</body>
+</html>

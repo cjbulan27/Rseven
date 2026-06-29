@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Rseven Graphic Solution</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      min-height: 100vh;
+      background: #1a0a2e;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: sans-serif;
+      padding: 2rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    @keyframes fadeDown {
+      from { opacity: 0; transform: translateY(-20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes pulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(245,197,24,0.4); }
+      50%       { box-shadow: 0 0 0 10px rgba(245,197,24,0); }
+    }
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to   { transform: rotate(360deg); }
+    }
+    @keyframes float {
+      0%, 100% { transform: translateY(0px); }
+      50%       { transform: translateY(-6px); }
+    }
+    @keyframes shimmer {
+      0%   { background-position: -200% center; }
+      100% { background-position:  200% center; }
+    }
+    @keyframes orb1 {
+      0%, 100% { transform: translate(0,0) scale(1); }
+      33%       { transform: translate(30px,-20px) scale(1.1); }
+      66%       { transform: translate(-20px,15px) scale(0.9); }
+    }
+    @keyframes orb2 {
+      0%, 100% { transform: translate(0,0) scale(1); }
+      33%       { transform: translate(-25px,20px) scale(0.95); }
+      66%       { transform: translate(20px,-10px) scale(1.05); }
+    }
+    @keyframes inputGlow {
+      from { border-color: #f5c518; box-shadow: 0 0 0 0 rgba(245,197,24,0.3); }
+      to   { border-color: #f5c518; box-shadow: 0 0 0 4px rgba(245,197,24,0.08); }
+    }
+    @keyframes btnPress {
+      0%   { transform: scale(1); }
+      50%  { transform: scale(0.97); }
+      100% { transform: scale(1); }
+    }
+    @keyframes checkmark {
+      0%   { stroke-dashoffset: 40; }
+      100% { stroke-dashoffset: 0; }
+    }
+
+    .orb {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(60px);
+      opacity: 0.25;
+      pointer-events: none;
+    }
+    .orb1 {
+      width: 280px; height: 280px;
+      background: #7b3fe4;
+      top: -80px; left: -80px;
+      animation: orb1 8s ease-in-out infinite;
+    }
+    .orb2 {
+      width: 240px; height: 240px;
+      background: #f5c518;
+      bottom: -60px; right: -60px;
+      animation: orb2 10s ease-in-out infinite;
+    }
+
+    .particles {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      overflow: hidden;
+    }
+    .particle {
+      position: absolute;
+      width: 3px; height: 3px;
+      background: #f5c518;
+      border-radius: 50%;
+    }
+
+    .wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+      z-index: 1;
+    }
+
+    .brand {
+      text-align: center;
+      margin-bottom: 1.75rem;
+      animation: fadeDown 0.6s ease both;
+    }
+    .brand-icon {
+      width: 64px; height: 64px;
+      background: transparent;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 0.75rem;
+      animation: float 3s ease-in-out infinite, pulse 2.5s ease-in-out infinite;
+    }
+    .brand h1 {
+      font-size: 64px; font-weight: 600;
+      background: linear-gradient(90deg, #f5c518, #fff4a0, #f5c518);
+      background-size: 200% auto;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: shimmer 3s linear infinite;
+    }
+    .brand h2{
+      font-size: 46px; font-weight: 600;
+      background: linear-gradient(90deg, #f5c518, #fff4a0, #f5c518);
+      background-size: 200% auto;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: shimmer 3s linear infinite;
+    }
+
+    .card {
+      background: #2d1054;
+      border: 0.5px solid #5c3d8f;
+      border-radius: 14px;
+      padding: 2rem;
+      width: 100%; max-width: 560px;
+      animation: fadeUp 0.7s ease 0.2s both;
+    }
+    .card h2 { font-size: 22px; font-weight: 500; color: #f5c518; margin-bottom: 2rem; }
+
+    .field { margin-bottom: 1.4rem; }
+    .field label {
+      display: block;
+      font-size: 13px; color: #9d7fc4;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+    }
+    .field input {
+      width: 100%;
+      padding: 10px 14px;
+      background: #1a0a2e;
+      border: 0.5px solid #5c3d8f;
+      border-radius: 8px;
+      color: #f0e6ff;
+      font-size: 15px;
+      outline: none;
+      transition: border-color 0.25s, box-shadow 0.25s;
+    }
+    .field input::placeholder { color: #6b4d8a; }
+    .field input:focus { animation: inputGlow 0.3s ease forwards; }
+
+    .btn {
+      width: 100%; padding: 16px;
+      background: #f5c518; color: #1a0a2e;
+      border: none; border-radius: 8px;
+      font-size: 16px; font-weight: 600;
+      cursor: pointer; margin-top: 0.5rem;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      transition: background 0.2s, opacity 0.2s;
+    }
+    .btn:hover { background: #e0b200; }
+    .btn:active { animation: btnPress 0.2s ease; }
+    .btn .spinner {
+      display: none;
+      width: 16px; height: 16px;
+      border: 2px solid rgba(26,10,46,0.3);
+      border-top-color: #1a0a2e;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+    .btn.loading .btn-text { opacity: 0.5; }
+    .btn.loading .spinner { display: block; }
+    .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    .success-overlay {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px; padding: 1rem 0;
+    }
+    .success-overlay svg { animation: fadeUp 0.4s ease both; }
+    .success-overlay p {
+      color: #f5c518;
+      font-size: 15px; font-weight: 500;
+      animation: fadeUp 0.4s ease 0.15s both;
+    }
+    .check-path {
+      stroke-dasharray: 40;
+      stroke-dashoffset: 40;
+      animation: checkmark 0.5s ease 0.1s forwards;
+    }
+
+    .error-msg {
+      color: #f87171;
+      font-size: 13px;
+      margin-top: 8px;
+      display: none;
+      text-align: center;
+    }
+    .error-msg.show { display: block; }
+
+    .footer-link { text-align: center; margin-top: 1rem; font-size: 12px; color: #9d7fc4; }
+    .footer-link a { color: #f5c518; text-decoration: none; transition: opacity 0.2s; }
+    .footer-link a:hover { opacity: 0.8; }
+
+    /* Toast styles */
+    #toast-stack {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 999;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .toast {
+      min-width: 280px;
+      background: #2d1054;
+      border: 0.5px solid #5c3d8f;
+      border-left: 3px solid #f5c518;
+      border-radius: 10px;
+      padding: 12px 16px;
+      font-size: 13px;
+      color: #f0e6ff;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+      animation: fadeUp 0.3s ease both;
+    }
+
+    .toast.success { border-left-color: #4ade80; }
+    .toast.error { border-left-color: #f87171; }
+    .toast.info { border-left-color: #60a5fa; }
+
+    .toast i { font-size: 18px; margin-top: 1px; }
+    .toast.success i { color: #4ade80; }
+    .toast.error i { color: #f87171; }
+    .toast.info i { color: #60a5fa; }
+
+    @media (max-width: 600px) {
+      .brand h1 { font-size: 40px; }
+      .brand h2 { font-size: 28px; }
+      .card { padding: 1.5rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="orb orb1"></div>
+  <div class="orb orb2"></div>
+  <div class="particles" id="particles"></div>
+
+  <div id="toast-stack"></div>
+
+  <div class="wrapper">
+    <div class="brand">
+      <div class="brand-icon">
+        <img src="89072922_3028538593858631_7555063944310685696_n.jpgg" 
+        alt="Rseven Graphic Solution" style="width:64px;height:64px;object-fit:contain;" />
+      </div> 
+      <h1>Rseven</h1>
+      <h2>Graphic Solution</h2>
+    </div>
+
+    <div class="card">
+      <div id="form-area">
+        <h2>Welcome back</h2>
+
+        <div class="field">
+          <label for="email">Email</label>
+          <input type="email" id="email" placeholder="Enter your email" autocomplete="email" />
+        </div>
+
+        <div class="field">
+          <label for="password">Password</label>
+          <input type="password" id="password" placeholder="Enter your password" autocomplete="current-password" />
+        </div>
+
+        <div class="error-msg" id="loginError">
+          <span id="errorMessage">Invalid email or password</span>
+        </div>
+
+        <button class="btn" id="loginBtn" onclick="handleLoginClick()">
+          <span class="btn-text">Login</span>
+          <div class="spinner"></div>
+        </button>
+      </div>
+
+      <div class="success-overlay" id="success">
+        <svg width="56" height="56" viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="28" cy="28" r="27" stroke="#f5c518" stroke-width="1.5"/>
+          <path class="check-path" d="M17 28l8 8 14-16"
+            stroke="#f5c518" stroke-width="2.5"
+            stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        </svg>
+        <p>Login successful!</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ============================================================
+    //  SUPABASE CONFIGURATION
+    // ============================================================
+    const SUPABASE_URL = 'https://pxnmojyievkshwaklfzj.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB4bm1vanlpZXZrc2h3YWtsZnpqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIyNDQ1MTAsImV4cCI6MjA5NzgyMDUxMH0.UDC2eg76kA4YJKhlh6sLhdFubF7L_zwWsnJxKnUwOGQ';
+
+    // ============================================================
+    //  INITIALIZE SUPABASE CLIENT
+    // ============================================================
+    // NOTE: the supabase-js CDN script exposes a global object called
+    // `supabase` (with a .createClient method on it) — not `supabaseJs`.
+    // We name our client instance `supabaseClient` so it doesn't collide
+    // with that global.
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // ============================================================
+    //  DOM REFS
+    // ============================================================
+    const emailInput = document.getElementById('email');
+    const passwordInput = document.getElementById('password');
+    const loginBtn = document.getElementById('loginBtn');
+    const btnText = document.querySelector('.btn-text');
+    const errorDiv = document.getElementById('loginError');
+    const errorMsg = document.getElementById('errorMessage');
+    const formArea = document.getElementById('form-area');
+    const successDiv = document.getElementById('success');
+
+    // ============================================================
+    //  SHOW/HIDE ERROR
+    // ============================================================
+    function showError(message) {
+      errorMsg.textContent = message;
+      errorDiv.classList.add('show');
+    }
+
+    function hideError() {
+      errorDiv.classList.remove('show');
+    }
+
+    // ============================================================
+    //  SET LOADING STATE
+    // ============================================================
+    function setLoading(loading) {
+      if (loading) {
+        loginBtn.disabled = true;
+        loginBtn.classList.add('loading');
+        btnText.textContent = 'Signing in...';
+      } else {
+        loginBtn.disabled = false;
+        loginBtn.classList.remove('loading');
+        btnText.textContent = 'Login';
+      }
+    }
+
+    // ============================================================
+    //  TOAST NOTIFICATIONS
+    // ============================================================
+    function showToast(type, title, sub) {
+      const stack = document.getElementById('toast-stack');
+      const iconMap = {
+        success: 'ti-circle-check',
+        error: 'ti-alert-circle',
+        info: 'ti-info-circle'
+      };
+      const el = document.createElement('div');
+      el.className = 'toast ' + type;
+      el.innerHTML = `<i class="ti ${iconMap[type] || 'ti-info-circle'}"></i>
+        <div><div>${title}</div>${sub ? `<small>${sub}</small>` : ''}</div>`;
+      stack.appendChild(el);
+      setTimeout(() => {
+        el.style.opacity = '0';
+        el.style.transform = 'translateY(-8px)';
+        el.style.transition = 'all .3s';
+      }, 3500);
+      setTimeout(() => el.remove(), 4000);
+    }
+
+    // ============================================================
+    //  MAIN LOGIN HANDLER - Using onclick
+    // ============================================================
+    async function handleLoginClick() {
+      // Prevent multiple clicks
+      if (loginBtn.disabled) return;
+      
+      hideError();
+
+      const email = emailInput.value.trim();
+      const password = passwordInput.value;
+
+      // Validation
+      if (!email || !password) {
+        showError('Please enter both email and password');
+        return;
+      }
+
+      setLoading(true);
+
+      try {
+        console.log('Attempting login for:', email);
+        
+        const { data, error } = await supabaseClient.auth.signInWithPassword({
+          email: email,
+          password: password,
+        });
+
+        if (error) {
+          console.error('Login error:', error);
+
+          if (error.message.includes('Invalid login credentials')) {
+            showError('Invalid email or password. Please try again.');
+          } else if (error.message.includes('Email not confirmed')) {
+            showError('Please verify your email address before signing in.');
+          } else {
+            showError(error.message || 'Login failed. Please try again.');
+          }
+          setLoading(false);
+          return;
+        }
+
+        // SUCCESS!
+        console.log('Login successful:', data.user);
+
+        // Store user info
+        sessionStorage.setItem('username', data.user.email);
+        sessionStorage.setItem('userId', data.user.id);
+
+        showToast('success', 'Welcome back!', `Signed in as ${data.user.email}`);
+
+        // Show success overlay
+        formArea.style.display = 'none';
+        successDiv.style.display = 'flex';
+
+        // Redirect after delay
+        setTimeout(() => {
+          window.location.href = 'homepage.html';
+        }, 1200);
+
+      } catch (err) {
+        console.error('Unexpected error:', err);
+        showError('An unexpected error occurred. Please try again.');
+        setLoading(false);
+      }
+    }
+
+    // ============================================================
+    //  CHECK EXISTING SESSION
+    // ============================================================
+    async function checkSession() {
+      try {
+        const { data: { session } } = await supabaseClient.auth.getSession();
+
+        if (session) {
+          // User already logged in
+          sessionStorage.setItem('username', session.user.email);
+          sessionStorage.setItem('userId', session.user.id);
+          window.location.href = 'homepage.html';
+        }
+      } catch (e) {
+        console.log('No active session');
+      }
+    }
+
+    // ============================================================
+    //  EVENT LISTENERS
+    // ============================================================
+    // Enter key to submit
+    passwordInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        handleLoginClick();
+      }
+    });
+
+    emailInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        passwordInput.focus();
+      }
+    });
+
+    // Clear error on input
+    emailInput.addEventListener('input', hideError);
+    passwordInput.addEventListener('input', hideError);
+
+    // ============================================================
+    //  PARTICLES
+    // ============================================================
+    const container = document.getElementById('particles');
+    for (let i = 0; i < 18; i++) {
+      const p = document.createElement('div');
+      p.className = 'particle';
+      p.style.cssText = `left:${Math.random()*100}%;top:${Math.random()*100}%;opacity:${0.1+Math.random()*0.2};animation:fadeUp ${2+Math.random()*3}s ease-in-out ${Math.random()*4}s infinite alternate;`;
+      container.appendChild(p);
+    }
+
+    // ============================================================
+    //  INIT
+    // ============================================================
+    console.log('✅ Login page loaded. Supabase URL:', SUPABASE_URL);
+    console.log('✅ Click the Login button or press Enter to submit.');
+    
+    // Check if already logged in
+    checkSession();
+  </script>
+</body>
+</html>
