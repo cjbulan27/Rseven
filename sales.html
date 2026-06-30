@@ -983,7 +983,7 @@
       function closeHistoryModal() { document.getElementById('historyModal').classList.remove('open'); }
 
       // ============================================================
-      // SAVE TO SUPABASE DATABASE
+      // SAVE TO SUPABASE DATABASE (FIXED: safe order handling)
       // ============================================================
       async function saveToDatabase() {
         if (isSavingToDb) return;
@@ -995,20 +995,17 @@
         try {
           persistActiveSheetSnapshot();
           
-          const sheetsToSave = sheetsData.map(sheet => {
-            const cellDataArray = (sheet.celldata || []).map(cell => ({
+          const sheetsToSave = sheetsData.map((sheet, idx) => ({
+            name: sheet.name || 'Sheet ' + (idx + 1),
+            rowCount: sheet.rowCount || DEFAULT_ROW_COUNT,
+            celldata: (sheet.celldata || []).map(cell => ({
               r: cell.r,
               c: cell.c,
               v: cell.v
-            }));
-            return {
-              name: sheet.name,
-              rowCount: sheet.rowCount,
-              celldata: cellDataArray
-            };
-          });
+            }))
+          }));
 
-          const sheetName = sheetsData[activeSheetIndex].name;
+          const sheetName = sheetsData[activeSheetIndex]?.name || 'Sheet 1';
           const { data: existing, error: checkError } = await supabase
             .from('sales_reports')
             .select('id')
@@ -1020,7 +1017,7 @@
           const payload = {
             sheet_name: sheetName,
             sheet_data: sheetsToSave,
-            row_count: sheetsData[activeSheetIndex].rowCount,
+            row_count: sheetsData[activeSheetIndex]?.rowCount || DEFAULT_ROW_COUNT,
             updated_at: new Date().toISOString()
           };
 
@@ -1039,7 +1036,7 @@
 
           if (result.error) throw result.error;
 
-          sheetsData[activeSheetIndex].savedToDb = true;
+          if (sheetsData[activeSheetIndex]) sheetsData[activeSheetIndex].savedToDb = true;
           showToast('success', 'Saved to database!', `${sheetName} saved successfully`);
           
         } catch (error) {
@@ -1053,7 +1050,7 @@
       }
 
       // ============================================================
-      // LOAD FROM SUPABASE DATABASE
+      // LOAD FROM SUPABASE DATABASE (FIXED: safe order handling)
       // ============================================================
       async function loadFromDatabase() {
         try {
@@ -1074,32 +1071,47 @@
           const latest = data[0];
           const loadedSheets = latest.sheet_data;
           
-          if (loadedSheets && loadedSheets.length > 0) {
-            sheetsData = loadedSheets.map(sheet => ({
+          if (loadedSheets && Array.isArray(loadedSheets) && loadedSheets.length > 0) {
+            sheetsData = loadedSheets.map((sheet, idx) => ({
               id: uid(),
-              name: sheet.name || 'Sheet 1',
-              order: 0,
+              name: sheet.name || 'Sheet ' + (idx + 1),
+              order: idx,
               rowCount: sheet.rowCount || DEFAULT_ROW_COUNT,
-              celldata: sheet.celldata || [],
+              celldata: (sheet.celldata || []).map(cell => ({
+                r: cell.r,
+                c: cell.c,
+                v: cell.v
+              })),
               frozen: true,
               active: false,
               savedToDb: true
             }));
             
-            sheetsData.forEach((sheet, idx) => sheet.order = idx);
-            
             activeSheetIndex = 0;
-            sheetsData[activeSheetIndex].active = true;
+            if (sheetsData[activeSheetIndex]) sheetsData[activeSheetIndex].active = true;
             
             rebuildLuckysheet();
             renderSheetTabs();
             setTimeout(recalcAll, 300);
             
             showToast('success', 'Report loaded from database', `${latest.sheet_name} (${new Date(latest.updated_at).toLocaleDateString()})`);
+          } else {
+            showToast('info', 'No valid sheets found in database', 'Creating new sheet');
+            const firstSheet = createNewSheetModel('Sheet 1');
+            sheetsData = [firstSheet];
+            activeSheetIndex = 0;
+            rebuildLuckysheet();
+            renderSheetTabs();
           }
         } catch (error) {
           console.error('Error loading from database:', error);
           showToast('error', 'Failed to load from database', error.message);
+          // Fallback: create default sheet
+          const firstSheet = createNewSheetModel('Sheet 1');
+          sheetsData = [firstSheet];
+          activeSheetIndex = 0;
+          rebuildLuckysheet();
+          renderSheetTabs();
         }
       }
 
