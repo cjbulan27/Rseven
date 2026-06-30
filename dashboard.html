@@ -15,7 +15,8 @@
       background: #1a0a2e;
       min-height: 100vh;
       display: flex;
-      overflow-x: hidden;
+      overflow: hidden; /* Prevent body scroll */
+      height: 100vh;
     }
 
     @keyframes float   { 0%,100%{ transform:translateY(0); } 50%{ transform:translateY(-5px); } }
@@ -26,25 +27,84 @@
     @keyframes orb1    { 0%,100%{ transform:translate(0,0) scale(1); } 33%{ transform:translate(30px,-20px) scale(1.1); } 66%{ transform:translate(-20px,15px) scale(0.9); } }
     @keyframes orb2    { 0%,100%{ transform:translate(0,0) scale(1); } 33%{ transform:translate(-25px,20px) scale(0.95); } 66%{ transform:translate(20px,-10px) scale(1.05); } }
     @keyframes spin    { to { transform:rotate(360deg); } }
+    @keyframes slideDown {
+      from { opacity: 0; transform: translateY(-20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
 
     .orb { position:fixed; border-radius:50%; filter:blur(60px); opacity:0.2; pointer-events:none; z-index:0; }
     .orb1 { width:280px; height:280px; background:#7b3fe4; top:-80px; left:-80px; animation:orb1 8s ease-in-out infinite; }
     .orb2 { width:240px; height:240px; background:#f5c518; bottom:-60px; right:-60px; animation:orb2 10s ease-in-out infinite; }
 
-    /* ===== SIDEBAR ===== */
+    /* Daily Reset Banner */
+    .daily-reset-banner {
+      background: linear-gradient(135deg, #2d1054, #4a1a7a);
+      border: 1px solid #f5c518;
+      border-radius: 12px;
+      padding: 12px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 10px;
+      animation: slideDown 0.5s ease;
+      flex-shrink: 0;
+    }
+    .daily-reset-banner .reset-info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: #f0e6ff;
+    }
+    .daily-reset-banner .reset-info i {
+      color: #f5c518;
+      font-size: 20px;
+    }
+    .daily-reset-banner .reset-info .time {
+      color: #f5c518;
+      font-weight: 600;
+    }
+    .daily-reset-banner .reset-btn {
+      background: rgba(245, 197, 24, 0.15);
+      border: 0.5px solid rgba(245, 197, 24, 0.3);
+      border-radius: 8px;
+      padding: 6px 16px;
+      color: #f5c518;
+      cursor: pointer;
+      font-size: 13px;
+      transition: 0.2s;
+    }
+    .daily-reset-banner .reset-btn:hover {
+      background: rgba(245, 197, 24, 0.25);
+    }
+
+    /* ===== SIDEBAR - FIXED ===== */
     .sidebar {
-      width:260px; min-width:260px; height:100vh;
+      width:260px; 
+      min-width:260px; 
+      height:100vh;
       background:#2d1054;
       border-right:0.5px solid #5c3d8f;
-      display:flex; flex-direction:column; align-items:center;
+      display:flex; 
+      flex-direction:column; 
+      align-items:center;
       padding:2rem 0 1.5rem;
-      position:relative; z-index:20;
+      position:fixed; /* Fixed position */
+      left:0;
+      top:0;
+      z-index:20;
       animation:slideIn 0.5s ease both;
+      overflow-y:auto; /* Allow sidebar to scroll if needed */
     }
+    .sidebar::-webkit-scrollbar { width: 4px; }
+    .sidebar::-webkit-scrollbar-track { background: transparent; }
+    .sidebar::-webkit-scrollbar-thumb { background: #5c3d8f; border-radius: 4px; }
+
     .sidebar-logo {
       width:100px; height:100px; border-radius:12px; margin-bottom:0.75rem;
       animation:float 3s ease-in-out infinite, pulse 2.5s ease-in-out infinite;
       object-fit:cover; display:block;
+      flex-shrink:0;
     }
     .sidebar-name {
       font-size:15px; font-weight:600; text-align:center; letter-spacing:1px;
@@ -54,21 +114,36 @@
       animation:shimmer 3s linear infinite;
     }
     .sidebar-sub { color:#9d7fc4; font-size:12px; text-align:center; margin-top:4px; }
-    .sidebar-divider { width:75%; height:0.5px; background:#5c3d8f; margin:1.2rem 0 1rem; }
-    .sidebar-nav { display:flex; flex-direction:column; width:100%; gap:4px; flex:1; padding:0 12px; }
+    .sidebar-divider { width:75%; height:0.5px; background:#5c3d8f; margin:1.2rem 0 1rem; flex-shrink:0; }
+    .sidebar-nav { 
+      display:flex; 
+      flex-direction:column; 
+      width:100%; 
+      gap:4px; 
+      flex:1; 
+      padding:0 12px;
+      overflow-y:auto;
+    }
+    .sidebar-nav::-webkit-scrollbar { width: 4px; }
+    .sidebar-nav::-webkit-scrollbar-track { background: transparent; }
+    .sidebar-nav::-webkit-scrollbar-thumb { background: #5c3d8f; border-radius: 4px; }
+
     .nav-item {
       width:100%; padding:12px 16px; color:#c9aff0; font-size:14px; font-weight:500;
       cursor:pointer; border-radius:10px; display:flex; align-items:center; gap:10px;
       text-decoration:none; transition:background 0.2s, color 0.2s;
+      flex-shrink:0;
     }
     .nav-item i { font-size:18px; }
     .nav-item:hover { background:rgba(245,197,24,0.08); color:#f5c518; }
     .nav-item.active { background:rgba(245,197,24,0.15); color:#f5c518; border:0.5px solid rgba(245,197,24,0.3); }
+
     .sidebar-logout {
       width:calc(100% - 24px); margin:0 12px; padding:12px 16px; color:#e24b4a;
       font-size:14px; font-weight:500; cursor:pointer; border-radius:10px;
       display:flex; align-items:center; gap:10px;
       border:0.5px solid rgba(226,75,74,0.3); transition:background 0.2s;
+      flex-shrink:0;
     }
     .sidebar-logout i { font-size:18px; }
     .sidebar-logout:hover { background:rgba(226,75,74,0.1); }
@@ -82,11 +157,23 @@
     .overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:10; }
     .overlay.open { display:block; }
 
-    /* ===== MAIN ===== */
+    /* ===== MAIN - SCROLLABLE ===== */
     .dash-main {
-      flex:1; min-height:100vh; overflow-y:auto; background:#1a0a2e;
-      padding:2.5rem; display:flex; flex-direction:column; gap:1.5rem;
-      position:relative; z-index:1; animation:fadeUp 0.6s ease 0.2s both;
+      flex:1;
+      min-height:100vh;
+      height:100vh;
+      overflow-y:auto; /* Main content scrolls */
+      overflow-x:hidden;
+      background:#1a0a2e;
+      padding:2.5rem;
+      padding-left: 2.5rem;
+      display:flex;
+      flex-direction:column;
+      gap:1.5rem;
+      position:relative;
+      z-index:1;
+      animation:fadeUp 0.6s ease 0.2s both;
+      margin-left: 260px; /* Push content right of sidebar */
     }
 
     /* ===== BUTTONS ===== */
@@ -95,6 +182,7 @@
       background:#7b3fe4; color:#fff; border:none; border-radius:14px;
       font-size:15px; font-weight:600; cursor:pointer; align-self:flex-start;
       transition:background 0.2s;
+      flex-shrink:0;
     }
     .dash-btn:hover { background:#6a30c8; }
 
@@ -103,9 +191,18 @@
       border-radius:8px; font-size:14px; font-weight:600; cursor:pointer;
       display:inline-flex; align-items:center; gap:6px;
       transition:background 0.2s; align-self:flex-end;
+      flex-shrink:0;
     }
     .add-btn:hover { background:#6a30c8; }
     .add-btn:disabled { opacity:0.5; cursor:not-allowed; }
+
+    .edit-btn {
+      background:rgba(96, 165, 250, 0.15); color:#60a5fa;
+      border:0.5px solid rgba(96, 165, 250, 0.3); border-radius:6px;
+      padding:5px 8px; cursor:pointer; transition:background 0.2s;
+      margin-right:4px;
+    }
+    .edit-btn:hover { background:rgba(96, 165, 250, 0.25); }
 
     .loading-spinner {
       display:inline-block; width:16px; height:16px;
@@ -114,7 +211,7 @@
     }
 
     /* ===== PANEL ===== */
-    .panel { background:#2d1054; border:0.5px solid #5c3d8f; border-radius:14px; padding:1.6rem; }
+    .panel { background:#2d1054; border:0.5px solid #5c3d8f; border-radius:14px; padding:1.6rem; flex-shrink:0; }
     .panel-title { color:#f5c518; font-size:13px; font-weight:600; margin-bottom:1.2rem; text-transform:uppercase; letter-spacing:0.5px; }
 
     /* ===== FORM ===== */
@@ -134,10 +231,21 @@
     .form-field select option { background:#2d1054; }
 
     /* ===== TABLE ===== */
-    .inv-table { width:100%; border-collapse:collapse; }
+    .table-wrap {
+      overflow-x:auto;
+      flex-shrink:0;
+    }
+    .inv-table { 
+      width:100%; 
+      border-collapse:collapse; 
+      min-width:800px;
+    }
     .inv-table th {
       background:rgba(245,197,24,0.1); color:#f5c518;
       font-size:12px; padding:11px 14px; text-align:left; letter-spacing:0.5px;
+      position:sticky;
+      top:0;
+      z-index:2;
     }
     .inv-table td { color:#c9aff0; font-size:13px; padding:11px 14px; border-top:0.5px solid #3d1a6e; }
     .inv-table tr:hover td { background:rgba(245,197,24,0.04); }
@@ -196,15 +304,58 @@
       background:rgba(245,197,24,0.1); color:#f5c518; font-weight:600; border-top:1px solid #f5c518;
     }
 
+    /* Material badges */
+    .material-badge {
+      display: inline-block;
+      padding: 2px 10px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 500;
+    }
+    .material-badge.normal {
+      background: rgba(96, 165, 250, 0.15);
+      color: #60a5fa;
+      border: 0.5px solid rgba(96, 165, 250, 0.3);
+    }
+    .material-badge.tarpaulin {
+      background: rgba(74, 222, 128, 0.15);
+      color: #4ade80;
+      border: 0.5px solid rgba(74, 222, 128, 0.3);
+    }
+    .material-badge.hologram {
+      background: rgba(245, 197, 24, 0.15);
+      color: #f5c518;
+      border: 0.5px solid rgba(245, 197, 24, 0.3);
+    }
+    .material-badge.motorplate {
+      background: rgba(167, 139, 250, 0.15);
+      color: #a78bfa;
+      border: 0.5px solid rgba(167, 139, 250, 0.3);
+    }
+
     @media(max-width:768px) {
-      .sidebar { position:fixed; left:0; top:0; transform:translateX(-100%); transition:transform 0.35s; }
+      .sidebar { 
+        position:fixed; 
+        left:0; 
+        top:0; 
+        transform:translateX(-100%); 
+        transition:transform 0.35s;
+        height:100vh;
+        z-index:20;
+      }
       .sidebar.open { transform:translateX(0); }
       .hamburger { display:flex; }
-      .dash-main { padding:1.5rem; padding-top:4.5rem; }
+      .dash-main { 
+        padding:1.5rem; 
+        padding-top:4.5rem;
+        margin-left: 0;
+        height:100vh;
+      }
       .form-row { grid-template-columns:1fr; }
       .toast { bottom:10px; right:10px; left:10px; text-align:center; }
       .modal-box { padding:16px; width:98%; }
       .report-stats { grid-template-columns:1fr 1fr; }
+      .daily-reset-banner { flex-direction: column; align-items: flex-start; }
     }
   </style>
 </head>
@@ -215,7 +366,7 @@
   <div class="overlay" id="overlay" onclick="closeNav()"></div>
   <button class="hamburger" onclick="toggleNav()"><i class="ti ti-menu-2"></i></button>
 
-  <!-- SIDEBAR -->
+  <!-- SIDEBAR - FIXED POSITION -->
   <div class="sidebar" id="sidebar">
     <img src="89072922_3028538593858631_7555063944310685696_n.jpg" alt="Rseven Logo" class="sidebar-logo" />
     <div class="sidebar-name">RSEVEN</div>
@@ -233,11 +384,27 @@
     </div>
   </div>
 
-  <!-- MAIN -->
+  <!-- MAIN - SCROLLABLE CONTENT -->
   <div class="dash-main">
 
+    <!-- Daily Reset Banner -->
+    <div class="daily-reset-banner" id="dailyResetBanner">
+      <div class="reset-info">
+        <i class="ti ti-refresh"></i>
+        <span>Auto-refresh active: Orders refresh <span class="time" id="nextResetTime">--:--</span></span>
+      </div>
+      <div style="display:flex; gap:8px;">
+        <button class="reset-btn" onclick="manualRefresh()">
+          <i class="ti ti-refresh"></i> Refresh Now
+        </button>
+        <button class="reset-btn" onclick="resetTableView()" style="border-color:#ef4444; color:#f87171;">
+          <i class="ti ti-rotate"></i> Reset View
+        </button>
+      </div>
+    </div>
+
     <!-- Header -->
-    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; flex-shrink:0;">
       <button class="dash-btn"><i class="ti ti-layout-dashboard"></i> Dashboard</button>
       <button class="add-btn" style="background:#3b82f6;" onclick="openReportModal()">
         <i class="ti ti-file-report"></i> View Previous Orders
@@ -308,33 +475,45 @@
             <input type="date" id="d-date" />
           </div>
         </div>
-        <!-- NEW ROW: Pickup Date -->
         <div class="form-row">
           <div class="form-field">
             <label>Pickup Date</label>
             <input type="date" id="d-pickup" />
           </div>
-          <div class="form-field" style="justify-content:flex-end;">
-            <!-- Empty spacer for alignment -->
+          <div class="form-field">
+            <label>Materials</label>
+            <select id="d-material">
+              <option value="">Select...</option>
+              <option value="Normal Roll">Normal Roll</option>
+              <option value="Tarpaulin Roll">Tarpaulin Roll</option>
+              <option value="Hologram Roll">Hologram Roll</option>
+              <option value="Motor Plate">Motor Plate</option>
+            </select>
           </div>
         </div>
-        <div style="display:flex; justify-content:flex-end;">
+        <div style="display:flex; justify-content:flex-end; gap:10px; flex-wrap:wrap;">
           <button class="add-btn" id="addBtn" onclick="addItem()">
             <i class="ti ti-plus"></i> Add Order
+          </button>
+          <button class="add-btn" id="updateBtn" onclick="updateItem()" style="display:none; background:#f5c518; color:#1a0a2e;">
+            <i class="ti ti-device-floppy"></i> Update Order
+          </button>
+          <button class="add-btn" id="cancelEditBtn" onclick="cancelEdit()" style="display:none; background:#ef4444;">
+            <i class="ti ti-x"></i> Cancel
           </button>
         </div>
       </div>
     </div>
 
     <!-- Table -->
-    <div class="panel">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+    <div class="panel" style="flex:1; display:flex; flex-direction:column; min-height:300px; overflow:hidden;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; flex-shrink:0;">
         <div class="panel-title" style="margin-bottom:0;">Pre-View Orders</div>
         <button class="add-btn" style="padding:6px 16px; font-size:12px; background:#3b82f6;" onclick="loadItems()">
           <i class="ti ti-refresh"></i> Refresh
         </button>
       </div>
-      <div style="overflow-x:auto;">
+      <div style="overflow:auto; flex:1;">
         <table class="inv-table">
           <thead>
             <tr>
@@ -342,6 +521,7 @@
               <th>Client</th>
               <th>Contact</th>
               <th>Product</th>
+              <th>Material</th>
               <th>Price</th>
               <th>Qty</th>
               <th>Size</th>
@@ -353,7 +533,7 @@
             </tr>
           </thead>
           <tbody id="d-tbody">
-            <tr><td colspan="12" style="text-align:center; color:#6b4d8a; padding:2rem;">Loading orders...</td></tr>
+            <tr><td colspan="13" style="text-align:center; color:#6b4d8a; padding:2rem;">Loading orders...</td></tr>
           </tbody>
         </table>
       </div>
@@ -407,12 +587,12 @@
           <thead>
             <tr>
               <th>Date</th><th>Client</th><th>Product</th>
-              <th>Qty</th><th>Price</th><th>Remarks</th>
-              <th>Payment</th><th>Pickup Date</th><th>Total</th>
+              <th>Material</th><th>Qty</th><th>Price</th>
+              <th>Remarks</th><th>Payment</th><th>Pickup Date</th><th>Total</th>
             </tr>
           </thead>
           <tbody id="reportBody">
-            <tr><td colspan="9" style="text-align:center; color:#6b4d8a; padding:20px;">No orders found</td></tr>
+            <tr><td colspan="10" style="text-align:center; color:#6b4d8a; padding:20px;">No orders found</td></tr>
           </tbody>
         </table>
       </div>
@@ -426,7 +606,6 @@
     const SUPABASE_URL      = 'https://pxnmojyievkshwaklfzj.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB4bm1vanlpZXZrc2h3YWtsZnpqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIyNDQ1MTAsImV4cCI6MjA5NzgyMDUxMH0.UDC2eg76kA4YJKhlh6sLhdFubF7L_zwWsnJxKnUwOGQ';
 
-    // Supabase v2 from CDN
     const { createClient } = supabase;
     const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
@@ -434,6 +613,74 @@
     // STATE
     // ============================================================
     let inventoryItems = [];
+    let editingId = null;
+
+    // ============================================================
+    // DAILY RESET / AUTO-REFRESH
+    // ============================================================
+    function getToday() {
+      return new Date().toISOString().split('T')[0];
+    }
+
+    function getNextResetTime() {
+      const now = new Date();
+      const tomorrow = new Date(now);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      tomorrow.setHours(0, 0, 0, 0);
+      return tomorrow;
+    }
+
+    function formatTime(date) {
+      return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+    }
+
+    function updateResetBanner() {
+      const nextReset = getNextResetTime();
+      document.getElementById('nextResetTime').textContent = formatTime(nextReset);
+    }
+
+    function checkAndReset() {
+      const today = getToday();
+      const lastReset = localStorage.getItem('rseven_last_reset_date');
+      
+      if (lastReset !== today) {
+        localStorage.setItem('rseven_last_reset_date', today);
+        showToast('🔄 Daily refresh completed! Orders view has been refreshed.', 'info');
+        loadItems();
+        updateResetBanner();
+        return true;
+      }
+      return false;
+    }
+
+    function manualRefresh() {
+      loadItems();
+      showToast('✅ Orders refreshed!', 'success');
+      localStorage.setItem('rseven_last_reset_date', getToday());
+      updateResetBanner();
+    }
+
+    function resetTableView() {
+      if (confirm('Reset the table view? This will refresh the display. All data remains in the database.')) {
+        loadItems();
+        showToast('🔄 Table view reset!', 'info');
+      }
+    }
+
+    // ============================================================
+    // MATERIAL BADGE CLASSES
+    // ============================================================
+    function getMaterialBadge(material) {
+      if (!material) return '<span style="color:#6b4d8a;">N/A</span>';
+      const classes = {
+        'Normal Roll': 'normal',
+        'Tarpaulin Roll': 'tarpaulin',
+        'Hologram Roll': 'hologram',
+        'Motor Plate': 'motorplate'
+      };
+      const cls = classes[material] || 'normal';
+      return `<span class="material-badge ${cls}">${material}</span>`;
+    }
 
     // ============================================================
     // TOAST
@@ -465,7 +712,7 @@
     // ============================================================
     async function loadItems() {
       const tbody = document.getElementById('d-tbody');
-      tbody.innerHTML = '<tr><td colspan="12" style="text-align:center; color:#6b4d8a; padding:2rem;">Loading orders...</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="13" style="text-align:center; color:#6b4d8a; padding:2rem;">Loading orders...</td></tr>';
 
       try {
         const { data, error } = await db
@@ -480,7 +727,7 @@
         showToast('Orders loaded!', 'success');
       } catch (err) {
         console.error('Load error:', err);
-        tbody.innerHTML = `<tr><td colspan="12" style="text-align:center; color:#ef4444; padding:2rem;">
+        tbody.innerHTML = `<tr><td colspan="13" style="text-align:center; color:#ef4444; padding:2rem;">
           Error: ${escapeHtml(err.message)}. Check your Supabase table name and RLS policies.
         </td></tr>`;
         showToast('Error loading orders: ' + err.message, 'error');
@@ -494,19 +741,21 @@
       const tbody = document.getElementById('d-tbody');
 
       if (!items || items.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="12" style="text-align:center; color:#6b4d8a; padding:2rem;">No orders found.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="13" style="text-align:center; color:#6b4d8a; padding:2rem;">No orders found.</td></tr>';
         return;
       }
 
       tbody.innerHTML = items.map(item => {
         const total = (Number(item.quantity) || 0) * (Number(item.price) || 0);
         const pickupDate = item.pickup_date || 'N/A';
+        const material = item.material || '';
         return `
           <tr>
             <td>${escapeHtml(item.date || 'N/A')}</td>
             <td>${escapeHtml(item.client_name)}</td>
             <td>${escapeHtml(item.contact)}</td>
             <td>${escapeHtml(item.product)}</td>
+            <td>${getMaterialBadge(material)}</td>
             <td>₱${Number(item.price || 0).toFixed(2)}</td>
             <td>${Number(item.quantity || 0)}</td>
             <td>${escapeHtml(item.size)}</td>
@@ -515,6 +764,9 @@
             <td>${escapeHtml(pickupDate)}</td>
             <td>₱${total.toLocaleString('en-PH', { minimumFractionDigits: 2 })}</td>
             <td>
+              <button class="edit-btn" onclick="editItem(${item.id})" title="Edit">
+                <i class="ti ti-edit"></i>
+              </button>
               <button class="del-btn" onclick="deleteItem(${item.id})" title="Delete">
                 <i class="ti ti-trash"></i>
               </button>
@@ -525,9 +777,47 @@
     }
 
     // ============================================================
-    // ADD ORDER
+    // EDIT ORDER
     // ============================================================
-    async function addItem() {
+    function editItem(id) {
+      const item = inventoryItems.find(it => it.id === id);
+      if (!item) {
+        showToast('Order not found', 'error');
+        return;
+      }
+
+      editingId = id;
+      
+      document.getElementById('d-client').value = item.client_name || '';
+      document.getElementById('d-contact').value = item.contact || '';
+      document.getElementById('d-product').value = item.product || '';
+      document.getElementById('d-qty').value = item.quantity || 0;
+      document.getElementById('d-price').value = item.price || 0;
+      document.getElementById('d-size').value = item.size || '';
+      document.getElementById('d-remarks').value = item.remarks || '';
+      document.getElementById('d-payment').value = item.payment || '';
+      document.getElementById('d-date').value = item.date || '';
+      document.getElementById('d-pickup').value = item.pickup_date || '';
+      document.getElementById('d-material').value = item.material || '';
+
+      document.getElementById('addBtn').style.display = 'none';
+      document.getElementById('updateBtn').style.display = 'inline-flex';
+      document.getElementById('cancelEditBtn').style.display = 'inline-flex';
+      
+      document.querySelector('.panel').scrollIntoView({ behavior: 'smooth' });
+      
+      showToast('Editing order #' + id, 'info');
+    }
+
+    // ============================================================
+    // UPDATE ORDER
+    // ============================================================
+    async function updateItem() {
+      if (!editingId) {
+        showToast('No order selected for editing', 'error');
+        return;
+      }
+
       const client   = document.getElementById('d-client').value.trim();
       const contact  = document.getElementById('d-contact').value.trim();
       const product  = document.getElementById('d-product').value;
@@ -538,8 +828,102 @@
       const payment  = document.getElementById('d-payment').value;
       const date     = document.getElementById('d-date').value || new Date().toISOString().split('T')[0];
       const pickup   = document.getElementById('d-pickup').value || null;
+      const material = document.getElementById('d-material').value || '';
 
-      // Validation
+      if (!client)            { showToast('Please enter a client name.', 'error'); return; }
+      if (!contact)           { showToast('Please enter contact information.', 'error'); return; }
+      if (!product)           { showToast('Please select a product.', 'error'); return; }
+      if (qty <= 0)           { showToast('Please enter a valid quantity.', 'error'); return; }
+      if (price <= 0)         { showToast('Please enter a valid price.', 'error'); return; }
+      if (!size)              { showToast('Please enter a size.', 'error'); return; }
+      if (!remarks)           { showToast('Please select remarks.', 'error'); return; }
+      if (!payment)           { showToast('Please select mode of payment.', 'error'); return; }
+
+      const updateBtn = document.getElementById('updateBtn');
+      updateBtn.disabled = true;
+      updateBtn.innerHTML = '<span class="loading-spinner"></span> Updating...';
+
+      try {
+        const { error } = await db
+          .from('orders')
+          .update({
+            client_name: client,
+            contact,
+            product,
+            quantity: qty,
+            price,
+            size,
+            remarks,
+            payment,
+            date,
+            pickup_date: pickup,
+            material: material,
+          })
+          .eq('id', editingId);
+
+        if (error) throw error;
+
+        showToast('Order updated successfully!', 'success');
+        cancelEdit();
+        await loadItems();
+
+      } catch (err) {
+        console.error('Update error:', err);
+        showToast('Error updating order: ' + err.message, 'error');
+      } finally {
+        updateBtn.disabled = false;
+        updateBtn.innerHTML = '<i class="ti ti-device-floppy"></i> Update Order';
+      }
+    }
+
+    // ============================================================
+    // CANCEL EDIT
+    // ============================================================
+    function cancelEdit() {
+      editingId = null;
+      document.getElementById('addBtn').style.display = 'inline-flex';
+      document.getElementById('updateBtn').style.display = 'none';
+      document.getElementById('cancelEditBtn').style.display = 'none';
+      
+      document.getElementById('d-client').value = '';
+      document.getElementById('d-contact').value = '';
+      document.getElementById('d-product').value = '';
+      document.getElementById('d-qty').value = '';
+      document.getElementById('d-price').value = '';
+      document.getElementById('d-size').value = '';
+      document.getElementById('d-remarks').value = '';
+      document.getElementById('d-payment').value = '';
+      document.getElementById('d-material').value = '';
+      document.getElementById('d-date').value = new Date().toISOString().split('T')[0];
+      
+      const pickupDefault = new Date();
+      pickupDefault.setDate(pickupDefault.getDate() + 3);
+      document.getElementById('d-pickup').value = pickupDefault.toISOString().split('T')[0];
+      
+      showToast('Edit cancelled', 'info');
+    }
+
+    // ============================================================
+    // ADD ORDER
+    // ============================================================
+    async function addItem() {
+      if (editingId) {
+        cancelEdit();
+        return;
+      }
+
+      const client   = document.getElementById('d-client').value.trim();
+      const contact  = document.getElementById('d-contact').value.trim();
+      const product  = document.getElementById('d-product').value;
+      const qty      = parseInt(document.getElementById('d-qty').value) || 0;
+      const price    = parseFloat(document.getElementById('d-price').value) || 0;
+      const size     = document.getElementById('d-size').value.trim();
+      const remarks  = document.getElementById('d-remarks').value;
+      const payment  = document.getElementById('d-payment').value;
+      const date     = document.getElementById('d-date').value || new Date().toISOString().split('T')[0];
+      const pickup   = document.getElementById('d-pickup').value || null;
+      const material = document.getElementById('d-material').value || '';
+
       if (!client)            { showToast('Please enter a client name.', 'error'); return; }
       if (!contact)           { showToast('Please enter contact information.', 'error'); return; }
       if (!product)           { showToast('Please select a product.', 'error'); return; }
@@ -565,14 +949,14 @@
           payment,
           date,
           pickup_date: pickup,
+          material: material,
         }]);
 
         if (error) throw error;
 
         showToast('Order added successfully!', 'success');
 
-        // Clear form
-        ['d-client','d-contact','d-qty','d-price','d-size','d-pickup'].forEach(id => {
+        ['d-client','d-contact','d-qty','d-price','d-size','d-pickup','d-material'].forEach(id => {
           document.getElementById(id).value = '';
         });
         ['d-product','d-remarks','d-payment'].forEach(id => {
@@ -601,6 +985,7 @@
         const { error } = await db.from('orders').delete().eq('id', id);
         if (error) throw error;
         showToast('Order deleted!', 'success');
+        if (editingId === id) cancelEdit();
         await loadItems();
       } catch (err) {
         console.error('Delete error:', err);
@@ -641,7 +1026,7 @@
 
       const tbody = document.getElementById('reportBody');
       if (filtered.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="9" style="text-align:center; color:#6b4d8a; padding:20px;">No orders in this date range</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="10" style="text-align:center; color:#6b4d8a; padding:20px;">No orders in this date range</td></tr>';
         return;
       }
 
@@ -650,10 +1035,12 @@
         const total = (Number(item.quantity) || 0) * (Number(item.price) || 0);
         runningTotal += total;
         const pickupDate = item.pickup_date || 'N/A';
+        const material = item.material || '';
         return `<tr>
           <td>${escapeHtml(item.date || 'N/A')}</td>
           <td>${escapeHtml(item.client_name)}</td>
           <td>${escapeHtml(item.product)}</td>
+          <td>${escapeHtml(material)}</td>
           <td>${item.quantity || 0}</td>
           <td>₱${Number(item.price || 0).toFixed(2)}</td>
           <td><span style="color:${item.remarks === '50%' ? '#facc15' : '#4ade80'}">${escapeHtml(item.remarks)}</span></td>
@@ -664,7 +1051,7 @@
       }).join('');
 
       html += `<tr class="report-total-row">
-        <td colspan="8" style="text-align:right;">TOTAL:</td>
+        <td colspan="9" style="text-align:right;">TOTAL:</td>
         <td>₱${runningTotal.toLocaleString('en-PH', { minimumFractionDigits: 2 })}</td>
       </tr>`;
 
@@ -698,23 +1085,32 @@
     // ============================================================
     document.addEventListener('DOMContentLoaded', () => {
       document.getElementById('d-date').value = new Date().toISOString().split('T')[0];
-      // Set default pickup date to 3 days from now
       const pickupDefault = new Date();
       pickupDefault.setDate(pickupDefault.getDate() + 3);
       document.getElementById('d-pickup').value = pickupDefault.toISOString().split('T')[0];
+      
+      checkAndReset();
       loadItems();
+      updateResetBanner();
+      
+      setInterval(() => {
+        checkAndReset();
+        updateResetBanner();
+      }, 3600000);
     });
 
-    // Close modal on overlay click
     document.getElementById('reportModal').addEventListener('click', function(e) {
       if (e.target === this) closeReportModal();
     });
 
-    // Enter key submits form
     document.addEventListener('keydown', function(e) {
       if (e.key === 'Enter' && document.activeElement.closest('.form-grid')) {
         e.preventDefault();
-        addItem();
+        if (editingId) {
+          updateItem();
+        } else {
+          addItem();
+        }
       }
     });
   </script>
