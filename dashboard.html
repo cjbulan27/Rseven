@@ -433,6 +433,16 @@
               <option>Gospel Hexagon Wall Decor</option>
               <option>Keychain</option>
               <option>Sticker</option>
+              <option>Sintra Board With Sticker</option>
+              <option>A4 Solo</option>
+              <option>A4 Set</option>
+              <option>A3 Solo</option>
+              <option>A3 Set</option>
+              <option>Tarpaulin</option>
+              <option>Clear Sticker</option>
+              <option>Motor Plate</option>
+              <option>Car Plate</option>
+              <option>White Sticker</option>
             </select>
           </div>
         </div>
@@ -484,10 +494,15 @@
             <label>Materials</label>
             <select id="d-material">
               <option value="">Select...</option>
-              <option value="Normal Roll">Normal Roll</option>
-              <option value="Tarpaulin Roll">Tarpaulin Roll</option>
-              <option value="Hologram Roll">Hologram Roll</option>
+              <option value="White Roll">White Sticker</option>
+              <option value="Tarpaulin Roll">Tarpaulin Sticker</option>
+              <option value="Hologram Roll">Hologram Sticker</option>
+              <option value="Cut-out-Sticker">Cut-out Sticker</option>
               <option value="Motor Plate">Motor Plate</option>
+              <option value="Clear Sticker"> Clear Sticker</option>
+              <option value="Sintraboard3mmB">Sintra Board 3mm B</option>
+              <option value="Sintraboard11mmW">Sintra Board 11mm W</option>
+              <option value="Sintraboard15mmB">Sintra Board 15mm B</option>
             </select>
           </div>
         </div>
@@ -673,10 +688,17 @@
     function getMaterialBadge(material) {
       if (!material) return '<span style="color:#6b4d8a;">N/A</span>';
       const classes = {
-        'Normal Roll': 'normal',
-        'Tarpaulin Roll': 'tarpaulin',
-        'Hologram Roll': 'hologram',
-        'Motor Plate': 'motorplate'
+        'White Sticker': 'White Sticker',
+        'Tarpaulin Sticker': 'Tarpaulin Sticker',
+        'Hologram Sticker': 'Hologram Sticker',
+        'Motor Plate': 'Motor Plate',
+        'Clear Sticker': 'Clear Sticker',
+        'Cut-out Sticker': 'Cut-out Sticker',
+        'Sintra Board 3mm B': 'Sintra Board 3mm B',
+        'Sintra Board 11mm W': 'Sintra Board 11mm W',
+        'Sintra Board 15mm B': 'Sintra Board 15mm B'
+
+
       };
       const cls = classes[material] || 'normal';
       return `<span class="material-badge ${cls}">${material}</span>`;
