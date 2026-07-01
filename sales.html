@@ -4,16 +4,12 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>RSEVEN · Sales Reports</title>
-  <!-- Tabler Icons, Luckysheet, XLSX -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css" />
   <link rel="stylesheet" href="https://unpkg.com/luckysheet@2.1.13/dist/plugins/css/pluginsCss.css" />
   <link rel="stylesheet" href="https://unpkg.com/luckysheet@2.1.13/dist/plugins/plugins.css" />
   <link rel="stylesheet" href="https://unpkg.com/luckysheet@2.1.13/dist/css/luckysheet.css" />
   <link rel="stylesheet" href="https://unpkg.com/luckysheet@2.1.13/dist/assets/iconfont/iconfont.css" />
-  
-  <!-- Supabase SDK -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -121,7 +117,7 @@
     .sheet-wrap { flex:1; background:#ffffff; border-radius:14px; overflow:hidden; border:.5px solid #5c3d8f; position:relative; min-height:0; }
     #luckysheet-container { width:100%; height:100%; }
     .footer-row { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; }
-    .footer-left { font-size:12px; color:#9d7fc4; display:flex; gap:18px; flex-wrap:wrap; }
+    .footer-left { font-size:12px; color:#9d7fc4; display:flex; gap:18px; flex-wrap:wrap; align-items:center; }
     .footer-left b { color:#f0e6ff; }
     .footer-actions { display:flex; gap:10px; flex-wrap:wrap; }
     #toast-stack { position:fixed; top:18px; right:18px; z-index:999; display:flex; flex-direction:column; gap:10px; }
@@ -177,6 +173,15 @@
     ::-webkit-scrollbar { width:8px; height:8px; }
     ::-webkit-scrollbar-track { background:transparent; }
     ::-webkit-scrollbar-thumb { background:#5c3d8f; border-radius:8px; }
+    .luckysheet-cell-text, .luckysheet-cell-input, .luckysheet-formula-input,
+    .luckysheet-cell-inner, .luckysheet-editor-input, .luckysheet-cell-selected .luckysheet-cell-inner,
+    .luckysheet-grid .luckysheet-cell, .luckysheet-editor, .luckysheet-cell-number,
+    .luckysheet-cell-text, .luckysheet-formula-bar, .luckysheet-cell-value {
+      color: #1a0a2e !important;
+    }
+    .summary-row { background: rgba(245,197,24,0.1) !important; font-weight: 700 !important; }
+    .summary-row .luckysheet-cell-inner { color: #f5c518 !important; font-weight: 700 !important; }
+
     @media (max-width:768px) {
       .sidebar { position:fixed; left:0; top:0; transform:translateX(-100%); transition:transform .35s; }
       .sidebar.open { transform:translateX(0); }
@@ -190,8 +195,7 @@
   </style>
 </head>
 <body>
-  <div class="orb orb1"></div>
-  <div class="orb orb2"></div>
+  <div class="orb orb1"></div><div class="orb orb2"></div>
   <div class="overlay" id="overlay" onclick="closeNav()"></div>
   <button class="hamburger" onclick="toggleNav()"><i class="ti ti-menu-2"></i></button>
 
@@ -278,6 +282,7 @@
         <span>Rows: <b id="footRows">0</b></span>
         <span>Last saved: <b id="footSaved">just now</b></span>
         <span>Sheet: <b id="footSheet">Sheet 1</b></span>
+        <span id="summaryTotals" style="color:#f5c518; font-weight:600; display:none;"></span>
       </div>
       <div class="footer-actions">
         <button class="btn btn-ghost" id="duplicateSheetBtn"><i class="ti ti-copy"></i> Duplicate Sheet</button>
@@ -295,7 +300,6 @@
       <h3><i class="ti ti-clipboard-paste"></i> Paste from Excel</h3>
       <p style="color:#9d7fc4;font-size:13px;margin-bottom:10px;">Paste a column of numbers (or multiple columns) from Excel/Google Sheets.</p>
       <textarea id="pasteArea" class="paste-area" rows="6" placeholder="Paste your data here...&#10;e.g. copy a column from Excel and paste it"></textarea>
-      
       <div class="col-selector">
         <label for="targetColumn">Paste into column:</label>
         <select id="targetColumn">
@@ -310,14 +314,12 @@
         </select>
         <span style="color:#6b4d8a;font-size:12px;">(calc columns are protected)</span>
       </div>
-
       <div style="display:flex;gap:8px;flex-wrap:wrap;">
         <button class="btn btn-gold" id="previewPasteBtn"><i class="ti ti-eye"></i> Preview</button>
         <button class="btn btn-ghost" id="clearPasteBtn"><i class="ti ti-eraser"></i> Clear</button>
         <span style="flex:1;"></span>
         <button class="btn btn-danger-ghost" id="closePasteModalBtn"><i class="ti ti-x"></i> Close</button>
       </div>
-
       <div id="pastePreviewContainer" style="display:none; margin-top:12px;">
         <div class="preview-stats" id="previewStats">
           <span>Total: <span class="stat-number" id="statTotal">0</span></span>
@@ -406,70 +408,33 @@
       const HEADER_FONT = '#f5c518';
 
       const PRELOADED_PRODUCTS = [
-        'RGS A3 WALL DECOR SET',
-        'RGS A3 WALL DECOR SOLO',
-        'RGS A4 WALL DECOR SET',
-        'RGS A4 WALL DECOR SOLO',
-        'RGS AGAPAE CREWNECK',
-        'RGS AGAPE HOODIE KJCKET WITH ZIPPER','RGS AGAPE TSSHIRT ASSTD',
-        'RGS BLESSED STICKER 2X1',
-        'RGS RGS BLESSED STICKER 3X1.5',
-        'RGS BLESSED STICKER 4X2',
-        'RGS BLESSSED WALL DECOR',
-        'RGS BLOOM WALL DECOR',
-        'RGS JESUS THE WAY STICKERS 3X1.7',
-        'RGS JESUS THE WAY STICKERS 4X2.2',
-        'RGS JESUS THE WAY STICKER 6X4',
-        'RGS KEYCAHAIN',
-        'RGS NET CAP W/BOX',
-        'RGS COTTON CAPS W/BOX',
-        'RGS PRAY STICKER 1.7X1.7',
-        'RGS SAFE STICKERS 3.5X1.7',
-        'RGS SAFE STICKER 4X2.2',
-        'RGS SAFE STICKER 6X3.4',
-        'RGS STAY HUMBLE SET STICKERS',
-        'RGS SATY HUMBLE TXT STICKER 2.5X2.5',
-        'RGS SATY HUMBLE TXT STICKER 3.5X3.5',
-        'RGS T.I.S. J STICKER 2X2',
-        'RSG T.I.S. J STICKER 3X3',
-        'RSG T.I.S. J STICKER 4X4',
-        'RGS TOTE BAG LARGE',
-        'RGS TOTE BAG SMALL',
-        'RGS HEXAGON',
-        'RGS REF MAGNET'
+        'HEXAGON WLL DECPR','HOLOGRAM STICKER PHILIPPINE FLAG','HOLOGRAM STICKER PHILIPPINE FLAG',
+        'HOLOGRAM STICKER PHILIPPINE FLAG','HOLOGRAM STICKER PHILIPPINE FLAG 7 X1.5',
+        'RGS A3 WALL DECOR SET','RGS A3 WALL DECOR SOLO','RGS A4 WALL DECOR SET','RGS A4 WALL DECOR SOLO',
+        'RGS AGAPAE CREWNECK','RGS AGAPE HOODIE JACKET WITH ZIPPER','RGS AGAPE TSHIRT ASSTD',
+        'RGS BLESSED STICKER 2X1','RGS BLESSED STICKER 3X1.5','RGS BLESSED STICKER 4X2','RGS BLESSED  WALL DECOR',
+        'RGS BLOOM WALL DECOR','RGS COTTON CAP WITH BOX','RGS JESUS THE WAY STICKERS 3X1.7',
+        'RGS JESUS THE WAY STICKERS 4X2.2','RGS JESUS THE WAY STICKER 6X4','RGS KEYCHAIN',
+        'RGS KEYHOLDER','RGS REF MAGNET','RGS NET  CAP WITH BOX','RGS PRAY STICKER  1.7X1.7',
+        'RGS SAFE STICKERS 3.5X1.7','RGS SAFE STICKER 4X2.2','RGS SAFE STICKER 6X3.4',
+        'RGS SEMIN  OVERSIZED AGAPE T-SHRT','RGS STAY HUMBLE SET STICKERS','RGS STAY HUMBLE TXT STICKER 2.5X',
+        'RGS STAY HUMBLE TXT STICKER 3.5X3.5','RGS T.I.S. J STICKER 2X2','RGS T.I.S. J STICKER 3X3',
+        'RGS T.I.S. J STICKER 4X4','RGS TOTE BAG LARGE','RGS TOTE BAG SMALL'   
       ];
 
       const PRODUCT_COSTS = {
-        'RGS A3 WALL DECOR SET': 134.00,
-        'RGS A3 WALL DECOR SOLO': 45.00,
-        'RGS A4 WALL DECOR SET': 111.00,
-        'RGS A4 WALL DECOR SOLO': 37.00,
-        'RGS AGAPAE CREWNECK': 0,
-        'RGS AGAPE HOODIE KJCKET WITH ZIPPER': 0,
-        'RGS AGAPE TSSHIRT ASSTD': 0,
-        'RGS BLESSED STICKER 2X1': 3.00,
-        'RGS RGS BLESSED STICKER 3X1.5':5.00,
-        'RGS BLESSED STICKER 4X2':10.00,
-        'RGS JESUS THE WAY STICKERS 3X1.7': 6.00,
-        'RGS JESUS THE WAY STICKERS 4X2.2': 14.00,
-        'RGS JESUS THE WAY STICKER 6X4': 36.00,
-        'RGS KEYCAHAIN': 20.00,
-        'RGS NET CAP W/BOX': 75.00,
-        'RGS COTTON CAPS W/BOX':95.00,
-        'RGS PRAY STICKER 1.7X1.7': 0,
-        'RGS SAFE STICKERS 3.5X1.7': 10.00,
-        'RGS SAFE STICKER 4X2.2': 14.00,
-        'RGS SAFE STICKER 6X3.4': 31.00,
-        'RGS STAY HUMBLE SET STICKERS':36.00,
-        'RGS SATY HUMBLE TXT STICKER 2.5X2.5': 10.00,
-        'RGS SATY HUMBLE TXT STICKER 3.5X3.5': 19.00,
-        'RGS T.I.S. J STICKER 2X2': 0,
-        'RSG T.I.S. J STICKER 3X3': 0,
-        'RSG T.I.S. J STICKER 4X4': 0,
-        'RGS TOTE BAG LARGE':82.00,
-        'RGS TOTE BAG SMALL': 72.00,
-        'RGS HEXAGON':13,
-        'RGS REF MAGNET': 7.00
+        'HEXAGON WLL DECPR':0,'HOLOGRAM STICKER PHILIPPINE FLAG':0,'HOLOGRAM STICKER PHILIPPINE FLAG':0,
+        'HOLOGRAM STICKER PHILIPPINE FLAG':0,'HOLOGRAM STICKER PHILIPPINE FLAG 7 X1.5':0,
+        'RGS A3 WALL DECOR SET':134,'RGS A3 WALL DECOR SOLO':45,'RGS A4 WALL DECOR SET':111,'RGS A4 WALL DECOR SOLO':37,
+        'RGS AGAPAE CREWNECK':0,'RGS AGAPE HOODIE JACKET WITH ZIPPER':0,'RGS AGAPE TSHIRT ASSTD':0,
+        'RGS BLESSED STICKER 2X1':3,'RGS BLESSED STICKER 3X1.5':5,'RGS BLESSED STICKER 4X2':10,'RGS BLESSED  WALL DECOR':0,
+        'RGS BLOOM WALL DECOR':0,'RGS COTTON CAP WITH BOX':95,'RGS JESUS THE WAY STICKERS 3X1.7':6,
+        'RGS JESUS THE WAY STICKERS 4X2.2':14,'RGS JESUS THE WAY STICKER 6X4':36,'RGS KEYCHAIN':7,
+        'RGS KEYHOLDER':20,'RGS REF MAGNET':7,'RGS NET  CAP WITH BOX':75,'RGS PRAY STICKER  1.7X1.7':4,
+        'RGS SAFE STICKERS 3.5X1.7':10,'RGS SAFE STICKER 4X2.2':14,'RGS SAFE STICKER 6X3.4':31,
+        'RGS SEMIN  OVERSIZED AGAPE T-SHRT':0,'RGS STAY HUMBLE SET STICKERS':36,'RGS STAY HUMBLE TXT STICKER 2.5X':10,
+        'RGS STAY HUMBLE TXT STICKER 3.5X3.5':19,'RGS T.I.S. J STICKER 2X2':5,'RGS T.I.S. J STICKER 3X3':11,
+        'RGS T.I.S. J STICKER 4X4':19,'RGS TOTE BAG LARGE':82,'RGS TOTE BAG SMALL':72
       };
 
       // ========== STATE ==========
@@ -612,6 +577,93 @@
         setCalcCell(rowIndex, 11, totalProfit);
       }
 
+      // ============================================================
+      // ADD SUMMARY ROW AT BOTTOM (shows totals for 60%, Total Sales, Total Profit)
+      // ============================================================
+      function addSummaryRow() {
+        const sheet = sheetsData[activeSheetIndex];
+        if (!sheet) return;
+        
+        let totalSixty = 0;
+        let totalSales = 0;
+        let totalProfit = 0;
+        let rowCount = 0;
+
+        // Calculate totals from data rows only (skip header and summary row)
+        for (let r = FIRST_DATA_ROW; r <= sheet.rowCount; r++) {
+          try {
+            const title = luckysheet.getCellValue(r, 1, { order: sheet.order });
+            if (!title || title === '📊 SUMMARY' || title === 'SUMMARY') continue;
+            
+            const sixty = getLiveVal(r, 9);
+            const sales = getLiveVal(r, 8);
+            const profit = getLiveVal(r, 11);
+            
+            totalSixty += sixty;
+            totalSales += sales;
+            totalProfit += profit;
+            rowCount++;
+          } catch(e) {}
+        }
+
+        // Find the summary row location
+        let summaryRow = sheet.rowCount + 1;
+        let existingSummary = false;
+        
+        for (let r = FIRST_DATA_ROW; r <= sheet.rowCount + 2; r++) {
+          try {
+            const val = luckysheet.getCellValue(r, 1, { order: sheet.order });
+            if (val === '📊 SUMMARY' || val === 'SUMMARY') {
+              summaryRow = r;
+              existingSummary = true;
+              break;
+            }
+          } catch(e) {}
+        }
+
+        if (!existingSummary) {
+          // Add a blank row for summary if it doesn't exist
+          summaryRow = sheet.rowCount + 1;
+          sheet.rowCount = summaryRow + 1;
+        }
+
+        // Set summary row cells with professional styling
+        const summaryData = [
+          { col: 0, value: '' },
+          { col: 1, value: '📊 SUMMARY' },
+          { col: 8, value: totalSales },
+          { col: 9, value: totalSixty },
+          { col: 11, value: totalProfit }
+        ];
+
+        summaryData.forEach(item => {
+          try {
+            const value = item.value;
+            const displayValue = typeof value === 'number' ? fmtMoney(value) : value;
+            luckysheet.setCellValue(summaryRow, item.col, {
+              v: value,
+              m: displayValue,
+              bg: 'rgba(245,197,24,0.15)',
+              fc: '#f5c518',
+              bl: 1,
+              fs: 13,
+              ht: 0
+            }, { order: sheet.order });
+          } catch(e) {}
+        });
+
+        // Update footer with professional summary
+        const summaryTotals = document.getElementById('summaryTotals');
+        if (summaryTotals) {
+          summaryTotals.style.display = 'inline';
+          summaryTotals.innerHTML = `
+            <span style="color:#60a5fa;">💰 Total Sales: <b style="color:#60a5fa;">${fmtMoney(totalSales)}</b></span>
+            <span style="color:#4ade80; margin-left:12px;">📊 60%: <b style="color:#4ade80;">${fmtMoney(totalSixty)}</b></span>
+            <span style="color:#fbbf24; margin-left:12px;">📈 Total Profit: <b style="color:#fbbf24;">${fmtMoney(totalProfit)}</b></span>
+          `;
+        }
+      }
+
       function recalcAll() {
         const sheet = sheetsData[activeSheetIndex];
         if (!sheet) return;
@@ -619,7 +671,7 @@
         for (let r = FIRST_DATA_ROW; r <= sheet.rowCount; r++) {
           try {
             const title = luckysheet.getCellValue(r, 1, { order: sheet.order });
-            if (!title) continue;
+            if (!title || title === '📊 SUMMARY' || title === 'SUMMARY') continue;
             recalcRow(r);
             count++;
           } catch(e) {}
@@ -627,11 +679,21 @@
         document.getElementById('footRows').textContent = count;
         document.getElementById('footSheet').textContent = sheet.name;
         document.getElementById('historySheetName').textContent = sheet.name;
+        
+        // Add summary row after recalculating
+        setTimeout(addSummaryRow, 50);
       }
 
       function onCellUpdated(r, c, oldVal, newVal) {
         if (r === HEADER_ROW) return;
         if (colIsCalc(c)) return;
+        
+        // Check if this is the summary row
+        try {
+          const title = luckysheet.getCellValue(r, 1, { order: sheetsData[activeSheetIndex].order });
+          if (title === '📊 SUMMARY' || title === 'SUMMARY') return;
+        } catch(e) {}
+        
         if (c === 1) {
           const titleVal = (newVal && typeof newVal === 'object') ? newVal.v : newVal;
           const presetCost = PRODUCT_COSTS[String(titleVal || '').trim()];
@@ -657,14 +719,29 @@
 
       // ========== LUCKYSHEET BRIDGE ==========
       function buildLuckysheetOptions(sheet) {
-        const celldata = [...buildHeaderCellData(), ...(sheet.celldata || buildPreloadedDataRows(sheet.rowCount))];
+        // Build celldata - include header, data rows, and summary row if it exists
+        let celldata = [...buildHeaderCellData()];
+        
+        // Add data rows
+        if (sheet.celldata) {
+          // Add all cells from celldata (including summary)
+          celldata = celldata.concat(sheet.celldata);
+        } else {
+          celldata = celldata.concat(buildPreloadedDataRows(sheet.rowCount));
+        }
+        
+        // Ensure we have at least header and some data
+        if (celldata.length === 0) {
+          celldata = [...buildHeaderCellData(), ...buildPreloadedDataRows(sheet.rowCount)];
+        }
+        
         return {
           name: sheet.name,
           color: '',
           status: sheet.active ? 1 : 0,
           order: sheet.order,
           index: sheet.id,
-          celldata,
+          celldata: celldata,
           row: Math.max(sheet.rowCount + 5, 80),
           column: COL_COUNT,
           config: {
@@ -684,8 +761,22 @@
         try {
           const allSheets = luckysheet.getAllSheets();
           const current = allSheets.find(s => s.name === sheetsData[activeSheetIndex].name) || allSheets[0];
-          if (current) sheetsData[activeSheetIndex].celldata = current.celldata || current.data;
-        } catch(e) {}
+          if (current) {
+            // Keep ALL cells including summary
+            const celldata = current.celldata || current.data || [];
+            sheetsData[activeSheetIndex].celldata = celldata;
+            // Update rowCount to include summary row
+            let maxRow = 0;
+            celldata.forEach(cell => {
+              if (cell.r > maxRow) maxRow = cell.r;
+            });
+            if (maxRow > sheetsData[activeSheetIndex].rowCount) {
+              sheetsData[activeSheetIndex].rowCount = maxRow + 2;
+            }
+          }
+        } catch(e) {
+          console.warn('Persist snapshot error:', e);
+        }
       }
 
       function rebuildLuckysheet() {
@@ -734,7 +825,8 @@
         setTimeout(() => { 
           document.getElementById('footSheet').textContent = sheet.name;
           document.getElementById('historySheetName').textContent = sheet.name;
-        }, 50);
+          recalcAll();
+        }, 100);
       }
 
       // ========== SHEET TABS ==========
@@ -951,7 +1043,6 @@
           const isCurrent = index === 0;
           const date = new Date(v.timestamp);
           const versionNum = versionHistory.length - index;
-          // Get sheet names from the version
           const sheetNames = v.sheets.map(s => s.name).join(', ');
           html += `
             <div class="version-item ${isCurrent ? 'active' : ''}">
@@ -974,7 +1065,6 @@
       function openHistoryModal() { 
         renderVersionHistory(); 
         document.getElementById('historyModal').classList.add('open');
-        // Update sheet name in modal header
         const currentSheet = sheetsData[activeSheetIndex];
         if (currentSheet) {
           document.getElementById('historySheetName').textContent = currentSheet.name;
@@ -983,7 +1073,7 @@
       function closeHistoryModal() { document.getElementById('historyModal').classList.remove('open'); }
 
       // ============================================================
-      // SAVE TO SUPABASE DATABASE (FIXED: safe order handling)
+      // SAVE TO SUPABASE DATABASE
       // ============================================================
       async function saveToDatabase() {
         if (isSavingToDb) return;
@@ -1050,7 +1140,7 @@
       }
 
       // ============================================================
-      // LOAD FROM SUPABASE DATABASE (FIXED: safe order handling)
+      // LOAD FROM SUPABASE DATABASE
       // ============================================================
       async function loadFromDatabase() {
         try {
@@ -1106,7 +1196,6 @@
         } catch (error) {
           console.error('Error loading from database:', error);
           showToast('error', 'Failed to load from database', error.message);
-          // Fallback: create default sheet
           const firstSheet = createNewSheetModel('Sheet 1');
           sheetsData = [firstSheet];
           activeSheetIndex = 0;
@@ -1138,16 +1227,14 @@
           let maxDataRow = 0;
           Object.keys(cellMap).forEach(key => {
             const [r] = key.split('_').map(Number);
-            if (r > HEADER_ROW && cellMap[`${r}_1`] !== undefined && cellMap[`${r}_1`] !== '' && cellMap[`${r}_1`] !== null) {
-              if (r > maxDataRow) maxDataRow = r;
-            }
+            if (r > maxDataRow) maxDataRow = r;
           });
           if (maxDataRow < FIRST_DATA_ROW) { showToast('error', 'No data rows to export. Add data first.'); return; }
           const aoa = [];
           aoa.push(COLUMNS.map(c => c.label));
           for (let r = FIRST_DATA_ROW; r <= maxDataRow; r++) {
             const title = cellMap[`${r}_1`];
-            if (title === undefined || title === null || title === '') continue;
+            if (title === undefined || title === null) continue;
             const row = COLUMNS.map((col, c) => {
               const raw = cellMap[`${r}_${c}`];
               if (raw === undefined || raw === null) return '';
@@ -1485,6 +1572,15 @@
           if (!sel || !sel[0]) { showToast('error', 'Select a row first'); return; }
           const row = sel[0].row[0];
           if (row === HEADER_ROW) { showToast('error', 'Cannot delete header row'); return; }
+          if (row === sheetsData[activeSheetIndex].rowCount) { 
+            try {
+              const title = luckysheet.getCellValue(row, 1, { order: sheetsData[activeSheetIndex].order });
+              if (title === '📊 SUMMARY' || title === 'SUMMARY') {
+                showToast('error', 'Cannot delete summary row');
+                return;
+              }
+            } catch(e) {}
+          }
           luckysheet.deleteRow(row, row);
           sheetsData[activeSheetIndex].rowCount = Math.max(1, sheetsData[activeSheetIndex].rowCount - 1);
           renumberRows();
@@ -1531,7 +1627,11 @@
       function renumberRows() {
         const sheet = sheetsData[activeSheetIndex];
         for (let r = FIRST_DATA_ROW; r <= sheet.rowCount; r++) {
-          try { luckysheet.setCellValue(r, 0, r, { order: sheet.order }); } catch(e) {}
+          try {
+            const title = luckysheet.getCellValue(r, 1, { order: sheet.order });
+            if (title === '📊 SUMMARY' || title === 'SUMMARY') continue;
+            luckysheet.setCellValue(r, 0, r, { order: sheet.order });
+          } catch(e) {}
         }
       }
 
@@ -1541,7 +1641,10 @@
         for (let r = FIRST_DATA_ROW; r <= sheet.rowCount; r++) {
           try {
             const title = String(luckysheet.getCellValue(r, 1, { order: sheet.order }) || '').toLowerCase();
-            if (title.includes(term)) { luckysheet.scrollTo({ row: r, column: 1 }); break; }
+            if (title.includes(term) && title !== '📊 summary' && title !== 'summary') { 
+              luckysheet.scrollTo({ row: r, column: 1 }); 
+              break; 
+            }
           } catch(e) {}
         }
       }
