@@ -33,6 +33,10 @@
       0%, 100% { opacity: 0.6; }
       50% { opacity: 1; }
     }
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
 
     /* Orbs */
     .orb { position:fixed; border-radius:50%; filter:blur(60px); opacity:0.2; pointer-events:none; z-index:0; }
@@ -194,6 +198,11 @@
       box-shadow: 0 2px 8px rgba(239,68,68,0.3);
     }
     .btn-danger:hover { box-shadow: 0 2px 12px rgba(239,68,68,0.5); }
+    .btn-primary {
+      background: #7b3fe4;
+      color: #fff;
+    }
+    .btn-primary:hover { background: #6a30c8; box-shadow: 0 4px 14px rgba(123,63,228,0.35); }
 
     .btn:disabled {
       opacity: 0.5;
@@ -335,13 +344,14 @@
     .order-table {
       width: 100%;
       border-collapse: collapse;
+      font-size: 13px;
     }
 
     .order-table th {
       background: rgba(245,197,24,0.1);
       color: #f5c518;
-      font-size: 12px;
-      padding: 10px 14px;
+      font-size: 11px;
+      padding: 10px 12px;
       text-align: left;
       letter-spacing: 0.5px;
       font-weight: 600;
@@ -349,13 +359,15 @@
       position: sticky;
       top: 0;
       z-index: 3;
+      white-space: nowrap;
     }
 
     .order-table td {
       color: #c9aff0;
-      font-size: 13px;
-      padding: 10px 14px;
+      font-size: 12px;
+      padding: 10px 12px;
       border-bottom: 0.5px solid #3d1a6e;
+      vertical-align: middle;
     }
 
     .order-table tr:hover td {
@@ -368,7 +380,7 @@
       display: inline-block;
       padding: 4px 14px;
       border-radius: 20px;
-      font-size: 12px;
+      font-size: 11px;
       font-weight: 600;
       cursor: pointer;
       transition: all 0.2s;
@@ -418,7 +430,7 @@
 
     .action-btns {
       display: flex;
-      gap: 6px;
+      gap: 4px;
       flex-wrap: wrap;
       justify-content: flex-end;
     }
@@ -426,9 +438,9 @@
       background: transparent;
       border: 0.5px solid #5c3d8f;
       border-radius: 6px;
-      padding: 4px 10px;
+      padding: 4px 8px;
       color: #c9aff0;
-      font-size: 12px;
+      font-size: 11px;
       cursor: pointer;
       transition: 0.15s;
       display: inline-flex;
@@ -573,6 +585,151 @@
       color: #f87171;
     }
 
+    /* ===== HISTORY REPORT MODAL ===== */
+    .history-modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.7);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+      animation: fadeUp 0.25s ease;
+    }
+    .history-modal-overlay.active {
+      display: flex;
+    }
+
+    .history-modal {
+      background: #2d1054;
+      border: 1px solid #5c3d8f;
+      border-radius: 16px;
+      padding: 2rem;
+      max-width: 950px;
+      width: 95%;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+    }
+
+    .history-modal h3 {
+      color: #f5c518;
+      font-size: 20px;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .history-modal .modal-close {
+      margin-left: auto;
+      background: transparent;
+      border: 0.5px solid #5c3d8f;
+      border-radius: 8px;
+      padding: 6px 14px;
+      color: #9d7fc4;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    .history-modal .modal-close:hover { border-color: #f87171; color: #f87171; }
+
+    .history-stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 12px;
+      margin: 16px 0;
+    }
+
+    .history-stat {
+      background: #1a0a2e;
+      border: 0.5px solid #5c3d8f;
+      border-radius: 10px;
+      padding: 12px 16px;
+      text-align: center;
+    }
+
+    .history-stat .stat-value {
+      font-size: 20px;
+      font-weight: 700;
+      color: #f5c518;
+    }
+
+    .history-stat .stat-label {
+      font-size: 11px;
+      color: #9d7fc4;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-top: 2px;
+    }
+
+    .history-table-wrap {
+      max-height: 400px;
+      overflow: auto;
+      border-radius: 10px;
+      border: 0.5px solid #5c3d8f;
+      margin-top: 12px;
+    }
+
+    .history-table-wrap table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+
+    .history-table-wrap th {
+      background: #1a0a2e;
+      color: #f5c518;
+      padding: 8px 10px;
+      text-align: left;
+      position: sticky;
+      top: 0;
+      z-index: 2;
+      border-bottom: 1px solid #5c3d8f;
+    }
+
+    .history-table-wrap td {
+      padding: 8px 10px;
+      color: #c9aff0;
+      border-bottom: 0.5px solid #3d1a6e;
+    }
+
+    .history-table-wrap tr:hover td {
+      background: rgba(245,197,24,0.04);
+    }
+
+    .history-month-selector {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+      margin: 12px 0;
+    }
+
+    .history-month-selector input[type="month"] {
+      background: #1a0a2e;
+      border: 0.5px solid #5c3d8f;
+      border-radius: 8px;
+      padding: 8px 14px;
+      color: #f0e6ff;
+      font-size: 13px;
+      outline: none;
+    }
+    .history-month-selector input[type="month"]:focus {
+      border-color: #f5c518;
+    }
+
+    /* Materials info badge */
+    .materials-badge {
+      display: inline-block;
+      padding: 2px 10px;
+      border-radius: 12px;
+      font-size: 10px;
+      font-weight: 500;
+      background: rgba(34, 197, 94, 0.2);
+      color: #4ade80;
+      border: 0.5px solid rgba(34, 197, 94, 0.3);
+    }
+
     @media(max-width:768px) {
       .sidebar { position:fixed; left:0; top:0; transform:translateX(-100%); }
       .sidebar.open { transform:translateX(0); }
@@ -584,6 +741,10 @@
       .status-modal { padding: 1.5rem; }
       .panel { max-height: 300px; }
       .filter-controls { flex-direction: column; align-items: stretch; }
+      .history-modal { padding: 1.5rem; }
+      .history-stats { grid-template-columns: 1fr 1fr; }
+      .order-table { font-size: 11px; }
+      .order-table th, .order-table td { padding: 6px 8px; }
     }
   </style>
 </head>
@@ -654,15 +815,80 @@
     </div>
   </div>
 
+  <!-- ===== HISTORY REPORT MODAL ===== -->
+  <div class="history-modal-overlay" id="historyModal">
+    <div class="history-modal">
+      <h3>
+        <i class="ti ti-file-report"></i> Monthly Order History
+        <button class="modal-close" onclick="closeHistoryModal()">✕ Close</button>
+      </h3>
+      <p style="color:#9d7fc4;font-size:13px;">View order history by month. Data is preserved even after monthly refresh.</p>
+
+      <div class="history-month-selector">
+        <label style="color:#9d7fc4;font-size:13px;">Select Month:</label>
+        <input type="month" id="historyMonth" onchange="loadHistoryReport()" />
+        <button class="btn btn-primary" onclick="loadHistoryReport()" style="padding:6px 16px; font-size:12px;">
+          <i class="ti ti-refresh"></i> Load
+        </button>
+        <button class="btn btn-success" onclick="exportHistoryReport()" style="padding:6px 16px; font-size:12px;">
+          <i class="ti ti-file-spreadsheet"></i> Export
+        </button>
+      </div>
+
+      <div class="history-stats" id="historyStats">
+        <div class="history-stat">
+          <div class="stat-value" id="histTotalOrders">0</div>
+          <div class="stat-label">Total Orders</div>
+        </div>
+        <div class="history-stat">
+          <div class="stat-value" id="histTotalRevenue">₱0.00</div>
+          <div class="stat-label">Total Revenue</div>
+        </div>
+        <div class="history-stat">
+          <div class="stat-value" id="histAvgOrder">₱0.00</div>
+          <div class="stat-label">Avg Order Value</div>
+        </div>
+        <div class="history-stat">
+          <div class="stat-value" id="histCompleted">0</div>
+          <div class="stat-label">Completed</div>
+        </div>
+      </div>
+
+      <div class="history-table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Order ID</th>
+              <th>Customer</th>
+              <th>Product</th>
+              <th>Materials</th>
+              <th>Date</th>
+              <th>Pickup Date</th>
+              <th>Complete Date</th>
+              <th>Total</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="historyBody">
+            <tr><td colspan="9" style="text-align:center;color:#6b4d8a;padding:20px;">Select a month to view history</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
   <!-- ===== ORDERS PAGE CONTENT ===== -->
   <main class="orders-page" id="ordersPage">
     <!-- Page Header -->
     <div class="page-header">
       <div>
         <h1><i class="ti ti-orders"></i> Orders Management</h1>
-        <div class="sub">Manage and track all your customer orders. Click status to open change menu.</div>
+        <div class="sub">Manage and track all your customer orders.</div>
       </div>
       <div class="header-actions">
+        <button class="btn btn-primary" onclick="openHistoryModal()">
+          <i class="ti ti-file-report"></i> History
+        </button>
         <button class="btn" onclick="refreshOrders()"><i class="ti ti-refresh"></i> Refresh</button>
       </div>
     </div>
@@ -707,6 +933,9 @@
         <option value="highest">Highest Total</option>
         <option value="lowest">Lowest Total</option>
       </select>
+      <input type="date" id="dateFrom" onchange="renderOrders()" title="Date From" />
+      <span style="color:#6b4d8a;">to</span>
+      <input type="date" id="dateTo" onchange="renderOrders()" title="Date To" />
     </div>
 
     <!-- Orders Table -->
@@ -721,7 +950,10 @@
             <th>Order ID</th>
             <th>Customer</th>
             <th>Product</th>
+            <th>Materials</th>
             <th>Date</th>
+            <th>Pickup Date</th>
+            <th>Complete Date</th>
             <th>Total</th>
             <th>Status</th>
             <th style="text-align:right;">Actions</th>
@@ -804,6 +1036,7 @@
     // ORDERS DATA
     // ============================================================
     let orders = [];
+    let productMaterials = {}; // Cache for product materials
     let selectedOrderId = null;
 
     const statusLabels = {
@@ -824,14 +1057,131 @@
     }
 
     // ============================================================
+    // LOAD PRODUCTS WITH MATERIALS FROM SUPABASE
+    // ============================================================
+    async function loadProductMaterials() {
+      try {
+        // Try to get materials from the products table
+        const { data, error } = await db
+          .from('products')
+          .select('name, materials, material');
+
+        if (error) throw error;
+
+        // Build a comprehensive map of product name -> materials
+        productMaterials = {};
+        (data || []).forEach(product => {
+          // Check both 'materials' and 'material' columns
+          const materialValue = product.materials || product.material || '';
+          if (product.name && materialValue) {
+            // Store with exact name
+            productMaterials[product.name] = materialValue;
+            // Store lowercase version
+            productMaterials[product.name.toLowerCase()] = materialValue;
+            
+            // Store without parentheses content
+            const cleanName = product.name.replace(/\([^)]*\)/g, '').trim();
+            if (cleanName) {
+              productMaterials[cleanName] = materialValue;
+              productMaterials[cleanName.toLowerCase()] = materialValue;
+            }
+            
+            // Store without quantity suffix (e.g., "Scripture Art (1x)" -> "Scripture Art")
+            const baseName = product.name.split('(')[0].trim();
+            if (baseName && baseName !== product.name) {
+              productMaterials[baseName] = materialValue;
+              productMaterials[baseName.toLowerCase()] = materialValue;
+            }
+          }
+        });
+        
+        console.log('Product materials loaded:', productMaterials);
+        
+        // Also try to get materials from the orders table directly if they exist
+        const { data: orderData, error: orderError } = await db
+          .from('orders')
+          .select('id, product, material, materials');
+
+        if (!orderError && orderData) {
+          orderData.forEach(order => {
+            if (order.product && (order.material || order.materials)) {
+              const materialValue = order.material || order.materials;
+              const key = order.product.toLowerCase();
+              if (!productMaterials[key]) {
+                productMaterials[key] = materialValue;
+              }
+            }
+          });
+        }
+        
+        return true;
+      } catch (error) {
+        console.error('Error loading product materials:', error);
+        return false;
+      }
+    }
+
+    // ============================================================
+    // GET MATERIALS FOR A PRODUCT
+    // ============================================================
+    function getMaterialsForProduct(productName) {
+      if (!productName) return null;
+      
+      // Clean the product name
+      const cleanName = productName.replace(/\([^)]*\)/g, '').trim();
+      const baseName = productName.split('(')[0].trim();
+      const lowerProduct = productName.toLowerCase();
+      const lowerClean = cleanName.toLowerCase();
+      const lowerBase = baseName.toLowerCase();
+      
+      console.log('Looking for materials for:', productName);
+      console.log('Cleaned name:', cleanName);
+      console.log('Base name:', baseName);
+      console.log('Available keys:', Object.keys(productMaterials));
+      
+      // Try all possible matches in order
+      const matchAttempts = [
+        productName,
+        lowerProduct,
+        cleanName,
+        lowerClean,
+        baseName,
+        lowerBase
+      ];
+      
+      for (const attempt of matchAttempts) {
+        if (attempt && productMaterials[attempt]) {
+          console.log('Found match for "' + attempt + '":', productMaterials[attempt]);
+          return productMaterials[attempt];
+        }
+      }
+      
+      // Try partial match
+      for (const key in productMaterials) {
+        const keyLower = key.toLowerCase();
+        if (keyLower.includes(lowerClean) || lowerClean.includes(keyLower) ||
+            keyLower.includes(lowerBase) || lowerBase.includes(keyLower)) {
+          console.log('Found partial match for "' + key + '":', productMaterials[key]);
+          return productMaterials[key];
+        }
+      }
+      
+      console.log('No materials found for:', productName);
+      return null;
+    }
+
+    // ============================================================
     // LOAD ORDERS FROM SUPABASE
     // ============================================================
     async function loadOrders() {
       try {
         document.getElementById('ordersBody').innerHTML = `
-          <tr><td colspan="7" style="text-align:center; color:#6b4d8a; padding:2rem;">Loading orders...</td></tr>
+          <tr><td colspan="10" style="text-align:center; color:#6b4d8a; padding:2rem;">Loading orders...</td></tr>
         `;
         document.getElementById('emptyOrders').style.display = 'none';
+
+        // First load product materials
+        await loadProductMaterials();
 
         const { data, error } = await db
           .from('orders')
@@ -841,12 +1191,42 @@
         if (error) throw error;
 
         orders = data || [];
+        
+        // Auto-populate materials from products if not already set
+        let updatedCount = 0;
+        for (let order of orders) {
+          // Check if order already has materials
+          const existingMaterial = order.materials || order.material || '';
+          if (!existingMaterial || existingMaterial === '' || existingMaterial === '—') {
+            const productName = order.product || '';
+            const materials = getMaterialsForProduct(productName);
+            if (materials) {
+              // Update the order in the database with the materials
+              await db
+                .from('orders')
+                .update({ materials: materials })
+                .eq('id', order.id);
+              order.materials = materials;
+              updatedCount++;
+              console.log(`Updated order #${order.id} with materials:`, materials);
+            }
+          } else {
+            // Use existing material
+            order.materials = existingMaterial;
+          }
+        }
+        
+        if (updatedCount > 0) {
+          console.log(`Updated ${updatedCount} orders with materials from products`);
+          showToast(`Updated ${updatedCount} orders with materials from products!`, 'success');
+        }
+
         renderOrders();
         showToast('Orders loaded successfully!', 'success');
       } catch (error) {
         console.error('Error loading orders:', error);
         document.getElementById('ordersBody').innerHTML = `
-          <tr><td colspan="7" style="text-align:center; color:#ef4444; padding:2rem;">Error: ${escapeHtml(error.message)}</td></tr>
+          <tr><td colspan="10" style="text-align:center; color:#ef4444; padding:2rem;">Error: ${escapeHtml(error.message)}</td></tr>
         `;
         showToast('Error loading orders: ' + error.message, 'error');
       }
@@ -857,12 +1237,18 @@
     // ============================================================
     async function updateOrderStatus(id, newStatus) {
       try {
+        const updates = { status: newStatus };
+        
+        if (newStatus === 'completed') {
+          updates.complete_date = new Date().toISOString().split('T')[0];
+          updates.feedback = Math.floor(Math.random() * 5) + 1;
+        } else {
+          updates.complete_date = null;
+        }
+
         const { error } = await db
           .from('orders')
-          .update({ 
-            status: newStatus,
-            feedback: newStatus === 'completed' ? Math.floor(Math.random() * 5) + 1 : null
-          })
+          .update(updates)
           .eq('id', id);
 
         if (error) throw error;
@@ -871,7 +1257,10 @@
         if (order) {
           order.status = newStatus;
           if (newStatus === 'completed') {
+            order.complete_date = new Date().toISOString().split('T')[0];
             order.feedback = Math.floor(Math.random() * 5) + 1;
+          } else {
+            order.complete_date = null;
           }
         }
 
@@ -914,6 +1303,8 @@
       const filter = document.getElementById('statusFilter').value;
       const search = document.getElementById('searchOrders').value.toLowerCase();
       const sort = document.getElementById('sortOrders').value;
+      const dateFrom = document.getElementById('dateFrom').value;
+      const dateTo = document.getElementById('dateTo').value;
 
       let filtered = orders.filter(order => {
         const customerName = order.client_name || '';
@@ -921,8 +1312,14 @@
         const searchMatch = customerName.toLowerCase().includes(search) || 
                            order.id.toString().includes(search) ||
                            (order.product || '').toLowerCase().includes(search) ||
-                           (order.client_name || '').toLowerCase().includes(search);
-        return statusMatch && searchMatch;
+                           (order.client_name || '').toLowerCase().includes(search) ||
+                           (order.materials || '').toLowerCase().includes(search);
+        
+        let dateMatch = true;
+        if (dateFrom && order.date < dateFrom) dateMatch = false;
+        if (dateTo && order.date > dateTo) dateMatch = false;
+        
+        return statusMatch && searchMatch && dateMatch;
       });
 
       filtered.sort((a, b) => {
@@ -935,7 +1332,6 @@
         }
       });
 
-      // Update stats
       const total = orders.length;
       const pending = orders.filter(o => o.status === 'pending' || o.remarks === '50%').length;
       const completed = orders.filter(o => o.status === 'completed' || o.remarks === 'Full Payment').length;
@@ -959,20 +1355,31 @@
 
       let html = '';
       filtered.forEach(order => {
-        // Determine status from status field or remarks
         let status = order.status;
         if (!status) {
           status = order.remarks === 'Full Payment' ? 'completed' : 'pending';
         }
         const statusClass = status;
         const totalAmount = (Number(order.quantity) || 0) * (Number(order.price) || 0);
+        const pickupDate = order.pickup_date || 'N/A';
+        const completeDate = order.complete_date || 'N/A';
+        const materials = order.materials || order.material || '—';
+        
+        // Check if materials came from product (has value and is not just a dash)
+        const hasAutoMaterials = materials && materials !== '—' && materials !== '';
         
         html += `
           <tr>
             <td><strong>#${order.id}</strong></td>
             <td>${escapeHtml(order.client_name || '')}</td>
-            <td style="font-size:12px; color:#9d7fc4;">${escapeHtml(order.product || '')} (${order.quantity || 0}x)</td>
+            <td style="font-size:11px; color:#9d7fc4;">${escapeHtml(order.product || '')} (${order.quantity || 0}x)</td>
+            <td style="font-size:11px; color:#9d7fc4; max-width:200px; word-break:break-word;">
+              ${escapeHtml(materials)}
+              ${hasAutoMaterials ? '<span class="materials-badge" style="margin-left:6px;">✓ from product</span>' : ''}
+            </td>
             <td>${order.date || 'N/A'}</td>
+            <td>${escapeHtml(pickupDate)}</td>
+            <td>${escapeHtml(completeDate)}</td>
             <td>₱${totalAmount.toFixed(2)}</td>
             <td>
               <button class="status-badge ${statusClass}" onclick="openStatusModal(${order.id})" title="Click to change status">
@@ -982,10 +1389,10 @@
             <td style="text-align:right;">
               <div class="action-btns">
                 <button class="btn-sm" onclick="openStatusModal(${order.id})" title="Change status">
-                  <i class="ti ti-arrows-sort"></i> Status
+                  <i class="ti ti-arrows-sort"></i>
                 </button>
                 <button class="btn-sm danger" onclick="deleteOrder(${order.id})">
-                  <i class="ti ti-trash"></i> Delete
+                  <i class="ti ti-trash"></i>
                 </button>
               </div>
             </td>
@@ -1009,7 +1416,6 @@
 
       document.getElementById('modalOrderId').textContent = `Order #${orderId}`;
       
-      // Update checkmarks
       document.querySelectorAll('.status-option .check').forEach(el => el.style.display = 'none');
       const statusMap = {
         'pending': 'check-pending',
@@ -1048,9 +1454,120 @@
       });
     }
 
-    // Close modal on overlay click
     document.getElementById('statusModal').addEventListener('click', function(e) {
       if (e.target === this) closeStatusModal();
+    });
+
+    // ============================================================
+    // HISTORY REPORT FUNCTIONS
+    // ============================================================
+    function openHistoryModal() {
+      document.getElementById('historyModal').classList.add('active');
+      
+      const now = new Date();
+      const defaultMonth = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
+      document.getElementById('historyMonth').value = defaultMonth;
+      
+      loadHistoryReport();
+    }
+
+    function closeHistoryModal() {
+      document.getElementById('historyModal').classList.remove('active');
+    }
+
+    function loadHistoryReport() {
+      const month = document.getElementById('historyMonth').value;
+      if (!month) {
+        showToast('Please select a month', 'info');
+        return;
+      }
+
+      const filtered = orders.filter(order => {
+        if (!order.date) return false;
+        return order.date.startsWith(month);
+      });
+
+      filtered.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+
+      const totalOrders = filtered.length;
+      const totalRevenue = filtered.reduce((sum, o) => sum + ((Number(o.quantity) || 0) * (Number(o.price) || 0)), 0);
+      const avgOrder = totalOrders > 0 ? totalRevenue / totalOrders : 0;
+      const completed = filtered.filter(o => o.status === 'completed' || o.remarks === 'Full Payment').length;
+
+      document.getElementById('histTotalOrders').textContent = totalOrders;
+      document.getElementById('histTotalRevenue').textContent = '₱' + totalRevenue.toLocaleString('en-PH', { minimumFractionDigits: 2 });
+      document.getElementById('histAvgOrder').textContent = '₱' + avgOrder.toLocaleString('en-PH', { minimumFractionDigits: 2 });
+      document.getElementById('histCompleted').textContent = completed;
+
+      const tbody = document.getElementById('historyBody');
+      if (filtered.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:#6b4d8a;padding:20px;">No orders found for this month</td></tr>';
+        return;
+      }
+
+      let html = '';
+      filtered.forEach(order => {
+        const status = order.status || (order.remarks === 'Full Payment' ? 'completed' : 'pending');
+        const totalAmount = (Number(order.quantity) || 0) * (Number(order.price) || 0);
+        const pickupDate = order.pickup_date || 'N/A';
+        const completeDate = order.complete_date || 'N/A';
+        const materials = order.materials || order.material || '—';
+        
+        html += `
+          <tr>
+            <td>#${order.id}</td>
+            <td>${escapeHtml(order.client_name || '')}</td>
+            <td>${escapeHtml(order.product || '')}</td>
+            <td>${escapeHtml(materials)}</td>
+            <td>${order.date || 'N/A'}</td>
+            <td>${escapeHtml(pickupDate)}</td>
+            <td>${escapeHtml(completeDate)}</td>
+            <td>₱${totalAmount.toFixed(2)}</td>
+            <td><span class="status-badge ${status}">${statusLabels[status] || (order.remarks === 'Full Payment' ? 'Completed' : 'Pending')}</span></td>
+          </tr>
+        `;
+      });
+      tbody.innerHTML = html;
+    }
+
+    function exportHistoryReport() {
+      const month = document.getElementById('historyMonth').value;
+      if (!month) {
+        showToast('Please select a month first', 'error');
+        return;
+      }
+
+      const filtered = orders.filter(order => {
+        if (!order.date) return false;
+        return order.date.startsWith(month);
+      });
+
+      if (filtered.length === 0) {
+        showToast('No orders found for this month', 'error');
+        return;
+      }
+
+      let csv = 'Order ID,Customer,Product,Materials,Quantity,Price,Date,Pickup Date,Complete Date,Status,Total\n';
+      filtered.forEach(order => {
+        const totalAmount = (Number(order.quantity) || 0) * (Number(order.price) || 0);
+        const status = order.status || (order.remarks === 'Full Payment' ? 'completed' : 'pending');
+        const materials = (order.materials || order.material || '').replace(/,/g, ';');
+        csv += `${order.id},"${order.client_name || ''}","${order.product || ''}","${materials}",${order.quantity || 0},${order.price || 0},${order.date || ''},${order.pickup_date || ''},${order.complete_date || ''},${status},${totalAmount.toFixed(2)}\n`;
+      });
+
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Orders_Report_${month}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+      
+      showToast('Report exported successfully!', 'success');
+    }
+
+    document.getElementById('historyModal').addEventListener('click', function(e) {
+      if (e.target === this) closeHistoryModal();
     });
 
     // ============================================================
@@ -1060,7 +1577,6 @@
       loadOrders();
     });
 
-    // Auto-refresh every 60 seconds
     setInterval(loadOrders, 60000);
   </script>
 </body>
