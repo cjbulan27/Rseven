@@ -549,7 +549,7 @@
       function getLiveVal(rowIndex, colIndex) {
         try {
           const sheet = sheetsData[activeSheetIndex];
-          const val = luckysheet.getCellValue(rowIndex, colIndex, { order: sheet.order });
+          const val = luckysheet.getCellValue(rowIndex, colIndex, { order: 0 });
           return toNum(val);
         } catch(e) { return 0; }
       }
@@ -563,7 +563,7 @@
             bg: CALC_BG,
             fc: CALC_FONT,
             bl: 0
-          }, { order: sheet.order });
+          }, { order: 0 });
         } catch(e) {}
       }
 
@@ -592,7 +592,7 @@
         // Calculate totals from data rows only (skip header and summary row)
         for (let r = FIRST_DATA_ROW; r <= sheet.rowCount; r++) {
           try {
-            const title = luckysheet.getCellValue(r, 1, { order: sheet.order });
+            const title = luckysheet.getCellValue(r, 1, { order: 0 });
             if (!title || title === '📊 SUMMARY' || title === 'SUMMARY') continue;
             
             const sixty = getLiveVal(r, 9);
@@ -612,7 +612,7 @@
         
         for (let r = FIRST_DATA_ROW; r <= sheet.rowCount + 2; r++) {
           try {
-            const val = luckysheet.getCellValue(r, 1, { order: sheet.order });
+            const val = luckysheet.getCellValue(r, 1, { order: 0 });
             if (val === '📊 SUMMARY' || val === 'SUMMARY') {
               summaryRow = r;
               existingSummary = true;
@@ -648,7 +648,7 @@
               bl: 1,
               fs: 13,
               ht: 0
-            }, { order: sheet.order });
+            }, { order: 0 });
           } catch(e) {}
         });
 
@@ -670,7 +670,7 @@
         let count = 0;
         for (let r = FIRST_DATA_ROW; r <= sheet.rowCount; r++) {
           try {
-            const title = luckysheet.getCellValue(r, 1, { order: sheet.order });
+            const title = luckysheet.getCellValue(r, 1, { order: 0 });
             if (!title || title === '📊 SUMMARY' || title === 'SUMMARY') continue;
             recalcRow(r);
             count++;
@@ -690,7 +690,7 @@
         
         // Check if this is the summary row
         try {
-          const title = luckysheet.getCellValue(r, 1, { order: sheetsData[activeSheetIndex].order });
+          const title = luckysheet.getCellValue(r, 1, { order: 0 });
           if (title === '📊 SUMMARY' || title === 'SUMMARY') return;
         } catch(e) {}
         
@@ -700,7 +700,7 @@
           if (presetCost !== undefined) {
             const sheet = sheetsData[activeSheetIndex];
             try {
-              luckysheet.setCellValue(r, 10, { v: presetCost, m: fmtMoney(presetCost), ht: 0 }, { order: sheet.order });
+              luckysheet.setCellValue(r, 10, { v: presetCost, m: fmtMoney(presetCost), ht: 0 }, { order: 0 });
             } catch(e) {}
           }
         }
@@ -739,7 +739,7 @@
           name: sheet.name,
           color: '',
           status: sheet.active ? 1 : 0,
-          order: sheet.order,
+          order: 0,
           index: sheet.id,
           celldata: celldata,
           row: Math.max(sheet.rowCount + 5, 80),
@@ -1467,7 +1467,7 @@
         let found = false;
         for (let r = FIRST_DATA_ROW; r <= sheet.rowCount + 10; r++) {
           try {
-            const val = luckysheet.getCellValue(r, targetColIndex, { order: sheet.order });
+            const val = luckysheet.getCellValue(r, targetColIndex, { order: 0 });
             if (val === undefined || val === null || val === '' || val === 0) {
               targetRow = r;
               found = true;
@@ -1486,11 +1486,11 @@
           const val = validRows[i].value;
           if (r > sheet.rowCount) sheet.rowCount = r + 1;
           try {
-            luckysheet.setCellValue(r, targetColIndex, { v: val, m: String(val), ht: 0 }, { order: sheet.order });
+            luckysheet.setCellValue(r, targetColIndex, { v: val, m: String(val), ht: 0 }, { order: 0 });
             if (targetColIndex !== 0) {
-              const existingNo = luckysheet.getCellValue(r, 0, { order: sheet.order });
+              const existingNo = luckysheet.getCellValue(r, 0, { order: 0 });
               if (!existingNo || existingNo === '' || existingNo === 0) {
-                luckysheet.setCellValue(r, 0, { v: r, m: String(r), ht: 0 }, { order: sheet.order });
+                luckysheet.setCellValue(r, 0, { v: r, m: String(r), ht: 0 }, { order: 0 });
               }
             }
             pastedCount++;
@@ -1552,8 +1552,8 @@
         document.getElementById('addRowBtn').addEventListener('click', () => {
           const sheet = sheetsData[activeSheetIndex];
           sheet.rowCount += 1;
-          luckysheet.insertRow(sheet.rowCount - 1, { order: sheet.order });
-          luckysheet.setCellValue(sheet.rowCount - 1, 0, sheet.rowCount, { order: sheet.order });
+          luckysheet.insertRow(sheet.rowCount - 1, { order: 0 });
+          luckysheet.setCellValue(sheet.rowCount - 1, 0, sheet.rowCount, { order: 0 });
           showToast('success', 'Row added');
           scheduleAutosave();
           saveVersion();
@@ -1574,7 +1574,7 @@
           if (row === HEADER_ROW) { showToast('error', 'Cannot delete header row'); return; }
           if (row === sheetsData[activeSheetIndex].rowCount) { 
             try {
-              const title = luckysheet.getCellValue(row, 1, { order: sheetsData[activeSheetIndex].order });
+              const title = luckysheet.getCellValue(row, 1, { order: 0 });
               if (title === '📊 SUMMARY' || title === 'SUMMARY') {
                 showToast('error', 'Cannot delete summary row');
                 return;
@@ -1628,9 +1628,9 @@
         const sheet = sheetsData[activeSheetIndex];
         for (let r = FIRST_DATA_ROW; r <= sheet.rowCount; r++) {
           try {
-            const title = luckysheet.getCellValue(r, 1, { order: sheet.order });
+            const title = luckysheet.getCellValue(r, 1, { order: 0 });
             if (title === '📊 SUMMARY' || title === 'SUMMARY') continue;
-            luckysheet.setCellValue(r, 0, r, { order: sheet.order });
+            luckysheet.setCellValue(r, 0, r, { order: 0 });
           } catch(e) {}
         }
       }
@@ -1640,7 +1640,7 @@
         if (!term) return;
         for (let r = FIRST_DATA_ROW; r <= sheet.rowCount; r++) {
           try {
-            const title = String(luckysheet.getCellValue(r, 1, { order: sheet.order }) || '').toLowerCase();
+            const title = String(luckysheet.getCellValue(r, 1, { order: 0 }) || '').toLowerCase();
             if (title.includes(term) && title !== '📊 summary' && title !== 'summary') { 
               luckysheet.scrollTo({ row: r, column: 1 }); 
               break; 
