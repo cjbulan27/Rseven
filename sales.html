@@ -422,6 +422,46 @@
         'RGS T.I.S. J STICKER 4X4','RGS TOTE BAG LARGE','RGS TOTE BAG SMALL'   
       ];
 
+      // ========== PRODUCT PRICES AND COSTS ==========
+      const PRODUCT_PRICES = {
+        'HEXAGON WLL DECPR': 75,
+        'HOLOGRAM STICKER PHILIPPINE FLAG': 0,
+        'HOLOGRAM STICKER PHILIPPINE FLAG 7 X1.5': 0,
+        'RGS A3 WALL DECOR SET': 849,
+        'RGS A3 WALL DECOR SOLO': 299,
+        'RGS A4 WALL DECOR SET': 499,
+        'RGS A4 WALL DECOR SOLO': 199,
+        'RGS AGAPAE CREWNECK': 1699,
+        'RGS AGAPE HOODIE JACKET WITH ZIPPER': 2199,
+        'RGS AGAPE TSHIRT ASSTD': 649,
+        'RGS BLESSED STICKER 2X1': 40,
+        'RGS BLESSED STICKER 3X1.5': 75,
+        'RGS BLESSED STICKER 4X2': 80,
+        'RGS BLESSED  WALL DECOR': 1599,
+        'RGS BLOOM WALL DECOR': 350,
+        'RGS COTTON CAP WITH BOX': 349,
+        'RGS JESUS THE WAY STICKERS 3X1.7': 75,
+        'RGS JESUS THE WAY STICKERS 4X2.2': 99,
+        'RGS JESUS THE WAY STICKER 6X4': 120,
+        'RGS KEYCHAIN': 130,
+        'RGS KEYHOLDER': 0,
+        'RGS REF MAGNET': 0,
+        'RGS NET  CAP WITH BOX': 299,
+        'RGS PRAY STICKER  1.7X1.7': 60,
+        'RGS SAFE STICKERS 3.5X1.7': 75,
+        'RGS SAFE STICKER 4X2.2': 85,
+        'RGS SAFE STICKER 6X3.4': 120,
+        'RGS SEMIN  OVERSIZED AGAPE T-SHRT': 0,
+        'RGS STAY HUMBLE SET STICKERS': 150,
+        'RGS STAY HUMBLE TXT STICKER 2.5X': 75,
+        'RGS STAY HUMBLE TXT STICKER 3.5X3.5': 90,
+        'RGS T.I.S. J STICKER 2X2': 60,
+        'RGS T.I.S. J STICKER 3X3': 85,
+        'RGS T.I.S. J STICKER 4X4': 99,
+        'RGS TOTE BAG LARGE': 349,
+        'RGS TOTE BAG SMALL': 199
+      };
+
       const PRODUCT_COSTS = {
         'HEXAGON WLL DECPR':0,'HOLOGRAM STICKER PHILIPPINE FLAG':0,'HOLOGRAM STICKER PHILIPPINE FLAG':0,
         'HOLOGRAM STICKER PHILIPPINE FLAG':0,'HOLOGRAM STICKER PHILIPPINE FLAG 7 X1.5':0,
@@ -510,10 +550,15 @@
               const idx = r - FIRST_DATA_ROW;
               val = PRELOADED_PRODUCTS[idx] || '';
             }
-            if (c === 10) {
+            if (c === 7) { // Price column (index 7)
               const idx = r - FIRST_DATA_ROW;
               const productName = PRELOADED_PRODUCTS[idx] || '';
-              val = PRODUCT_COSTS[productName] || 0;
+              val = PRODUCT_PRICES[productName] !== undefined ? PRODUCT_PRICES[productName] : 0;
+            }
+            if (c === 10) { // Cost column (index 10)
+              const idx = r - FIRST_DATA_ROW;
+              const productName = PRELOADED_PRODUCTS[idx] || '';
+              val = PRODUCT_COSTS[productName] !== undefined ? PRODUCT_COSTS[productName] : 0;
             }
             cells.push(makeCell(r, c, val));
           }
@@ -694,11 +739,21 @@
           if (title === '📊 SUMMARY' || title === 'SUMMARY') return;
         } catch(e) {}
         
-        if (c === 1) {
+        if (c === 1) { // Title column updated
           const titleVal = (newVal && typeof newVal === 'object') ? newVal.v : newVal;
-          const presetCost = PRODUCT_COSTS[String(titleVal || '').trim()];
+          const productName = String(titleVal || '').trim();
+          
+          // Update Price if preset exists
+          const presetPrice = PRODUCT_PRICES[productName];
+          if (presetPrice !== undefined) {
+            try {
+              luckysheet.setCellValue(r, 7, { v: presetPrice, m: fmtMoney(presetPrice), ht: 0 }, { order: 0 });
+            } catch(e) {}
+          }
+          
+          // Update Cost if preset exists
+          const presetCost = PRODUCT_COSTS[productName];
           if (presetCost !== undefined) {
-            const sheet = sheetsData[activeSheetIndex];
             try {
               luckysheet.setCellValue(r, 10, { v: presetCost, m: fmtMoney(presetCost), ht: 0 }, { order: 0 });
             } catch(e) {}
