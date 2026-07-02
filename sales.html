@@ -396,7 +396,8 @@
         { key: 'totalsales', label: 'Total Sales', width: 110, type: 'calc', numeric: true, currency: true },
         { key: 'sixty', label: '60%', width: 80, type: 'calc', numeric: true, currency: true },
         { key: 'cost', label: 'Cost', width: 100, type: 'input', numeric: true, currency: true },
-        { key: 'totalprofit', label: 'Total Profit', width: 120, type: 'calc', numeric: true, currency: true }
+        { key: 'Totalcost', label: 'Total Cost', width: 110, type: 'calc', numeric: true, currency: true },
+        { key: 'profit', label: 'Profit', width: 120, type: 'calc', numeric: true, currency: true }
       ];
       const COL_COUNT = COLUMNS.length;
       const HEADER_ROW = 0;
@@ -459,33 +460,33 @@
         'HOLOGRAM STICKER PHILIPPINE FLAG 1.8 x 3': 70,
         'HOLOGRAM STICKER PHILIPPINE FLAG 2.4 x 4': 100,
         'HOLOGRAM STICKER PHILIPPINE FLAG 3 x 5':150,
-        'HOLOGRAM STICKER PHILIPPINE FLAG 7 X1.5':150,
-        'HOLOGRAM STICKER PILIPINAS 9 X1.9':180,
+        'HOLOGRAM STICKER PILIPINAS 7 x 1.5':150,
+        'HOLOGRAM STICKER PILIPINAS 9 x 1.9':180,
         'RGS A3 WALL DECOR SET': 849,
         'RGS A3 WALL DECOR SOLO': 299,
         'RGS A4 WALL DECOR SET': 499,
         'RGS A4 WALL DECOR SOLO': 199,
-        'RGS AGAPAE CREWNECK': 1699,
+        'RGS AGAPE CREWNECK': 1699,
         'RGS AGAPE HOODIE JACKET WITH ZIPPER': 2199,
         'RGS AGAPE TSHIRT ': 649,
         'RGS BLESSED STICKER 2X1': 40,
         'RGS BLESSED STICKER 3X1.5': 75,
         'RGS BLESSED STICKER 4X2': 80,
-        'RGS BLESSED  WALL DECOR': 1599,
+        'RGS BLESSED WALL DECOR': 1599,
         'RGS BLOOM WALL DECOR': 350,
         'RGS COTTON CAP WITH BOX': 349,
         'RGS JESUS THE WAY STICKER 3X1.7': 75,
         'RGS JESUS THE WAY STICKER 4X2.2': 99,
         'RGS JESUS THE WAY STICKER 6X4': 120,
         'RGS KEYCHAIN ': 130,
-        'RGS NET  CAP WITH BOX': 299,
-        'RGS PRAY STICKER  1.7X1.7': 60,
+        'RGS NET CAP': 299,
+        'RGS PRAY STICKER 1.7X1.7': 60,
         'RGS SAFE STICKER 3.5X1.7': 75,
         'RGS SAFE STICKER 4X2.2': 85,
         'RGS SAFE STICKER 6X3.4': 120,
-        'RGS SEMIN  OVERSIZED AGAPE T-SHRT': 0,
+        'RGS SEMIN OVERSIZED AGAPE T-SHIRT': 0,
         'RGS STAY HUMBLE SET STICKER': 150,
-        'RGS STAY HUMBLE TXT STICKER 2.5X': 75,
+        'RGS STAY HUMBLE TXT STICKER 2.5X2.5': 75,
         'RGS STAY HUMBLE TXT STICKER 3.5X3.5': 90,
         'RGS T.I.S. J STICKER 2X2': 60,
         'RGS T.I.S. J STICKER 3X3': 85,
@@ -502,34 +503,33 @@
         'HOLOGRAM STICKER PHILIPPINE FLAG 1.8 x 3': 0,
         'HOLOGRAM STICKER PHILIPPINE FLAG 2.4 x 4': 0,
         'HOLOGRAM STICKER PHILIPPINE FLAG 3 x 5':0,
-        'HOLOGRAM STICKER PHILIPPINE FLAG': 0,
-        'HOLOGRAM STICKER PHILIPPINE FLAG 7 X1.5': 0,
-        'HOLOGRAM STICKER PILIPINAS 9 X1.9': 0,
+        'HOLOGRAM STICKER PILIPINAS 7 x 1.5': 0,
+        'HOLOGRAM STICKER PILIPINAS 9 x 1.9': 0,
         'RGS A3 WALL DECOR SET':134,
         'RGS A3 WALL DECOR SOLO':45,
         'RGS A4 WALL DECOR SET':111,
         'RGS A4 WALL DECOR SOLO':37,
-        'RGS AGAPAE CREWNECK':0,
+        'RGS AGAPE CREWNECK':0,
         'RGS AGAPE HOODIE JACKET WITH ZIPPER':0,
-        'RGS AGAPE TSHIRT ASSTD':0,
+        'RGS AGAPE TSHIRT ':0,
         'RGS BLESSED STICKER 2X1':3,
         'RGS BLESSED STICKER 3X1.5':5,
         'RGS BLESSED STICKER 4X2':10,
-        'RGS BLESSED  WALL DECOR':0,
+        'RGS BLESSED WALL DECOR':0,
         'RGS BLOOM WALL DECOR':0,
         'RGS COTTON CAP WITH BOX':95,
         'RGS JESUS THE WAY STICKER 3X1.7':6,
         'RGS JESUS THE WAY STICKER 4X2.2':14,
         'RGS JESUS THE WAY STICKER 6X4':36,
         'RGS KEYCHAIN ':7,
-        'RGS NET  CAP WITH BOX':75,
-        'RGS PRAY STICKER  1.7X1.7':4,
+        'RGS NET CAP':75,
+        'RGS PRAY STICKER 1.7X1.7':4,
         'RGS SAFE STICKER 3.5X1.7':10,
         'RGS SAFE STICKER 4X2.2':14,
         'RGS SAFE STICKER 6X3.4':31,
-        'RGS SEMIN  OVERSIZED AGAPE T-SHRT':0,
+        'RGS SEMIN OVERSIZED AGAPE T-SHIRT':0,
         'RGS STAY HUMBLE SET STICKER':36,
-        'RGS STAY HUMBLE TXT STICKER 2.5X':10,
+        'RGS STAY HUMBLE TXT STICKER 2.5X2.5':10,
         'RGS STAY HUMBLE TXT STICKER 3.5X3.5':19,
         'RGS T.I.S. J STICKER 2X2':5,
         'RGS T.I.S. J STICKER 3X3':11,
@@ -611,12 +611,12 @@
               const idx = r - FIRST_DATA_ROW;
               val = PRELOADED_PRODUCTS[idx] || '';
             }
-            if (c === 7) { // Price column (index 7)
+            if (c === 7) {
               const idx = r - FIRST_DATA_ROW;
               const productName = PRELOADED_PRODUCTS[idx] || '';
               val = PRODUCT_PRICES[productName] !== undefined ? PRODUCT_PRICES[productName] : 0;
             }
-            if (c === 10) { // Cost column (index 10)
+            if (c === 10) {
               const idx = r - FIRST_DATA_ROW;
               const productName = PRELOADED_PRODUCTS[idx] || '';
               val = PRODUCT_COSTS[productName] !== undefined ? PRODUCT_COSTS[productName] : 0;
@@ -642,26 +642,30 @@
       }
 
       // ========== ROW MATH ==========
+      // Formulas:
+      // Total Sales = Sold × Price
+      // 60% = Sold × Price × 0.6
+      // Total Cost = Cost × Sold
+      // Total Profit = 60% - Total Cost
       function computeRow(rowVals) {
         const sold = toNum(rowVals.sold);
         const price = toNum(rowVals.price);
         const cost = toNum(rowVals.cost);
         const totalSales = sold * price;
-        const sixty = totalSales * 0.60;
-        const totalProfit = sixty - cost;
-        return { totalSales, sixty, totalProfit };
+        const sixty = sold * price * 0.60;
+        const totalCost = cost * sold;
+        const totalProfit = sixty - totalCost;
+        return { totalSales, sixty, totalCost, totalProfit };
       }
 
       function getLiveVal(rowIndex, colIndex) {
         try {
-          const sheet = sheetsData[activeSheetIndex];
           const val = luckysheet.getCellValue(rowIndex, colIndex, { order: 0 });
           return toNum(val);
         } catch(e) { return 0; }
       }
 
       function setCalcCell(r, c, value) {
-        const sheet = sheetsData[activeSheetIndex];
         try {
           luckysheet.setCellValue(r, c, {
             v: value,
@@ -677,14 +681,15 @@
         const sold = getLiveVal(rowIndex, 5);
         const price = getLiveVal(rowIndex, 7);
         const cost = getLiveVal(rowIndex, 10);
-        const { totalSales, sixty, totalProfit } = computeRow({ sold, price, cost });
-        setCalcCell(rowIndex, 8, totalSales);
-        setCalcCell(rowIndex, 9, sixty);
-        setCalcCell(rowIndex, 11, totalProfit);
+        const { totalSales, sixty, totalCost, totalProfit } = computeRow({ sold, price, cost });
+        setCalcCell(rowIndex, 8, totalSales);   // Total Sales (Sold × Price)
+        setCalcCell(rowIndex, 9, sixty);        // 60% (Sold × Price × 0.6)
+        setCalcCell(rowIndex, 11, totalCost);   // Total Cost (Cost × Sold)
+        setCalcCell(rowIndex, 12, totalProfit); // Total Profit (60% - Total Cost)
       }
 
       // ============================================================
-      // ADD SUMMARY ROW AT BOTTOM (shows totals for 60%, Total Sales, Total Profit)
+      // ADD SUMMARY ROW AT BOTTOM
       // ============================================================
       function addSummaryRow() {
         const sheet = sheetsData[activeSheetIndex];
@@ -692,10 +697,10 @@
         
         let totalSixty = 0;
         let totalSales = 0;
+        let totalCost = 0;
         let totalProfit = 0;
         let rowCount = 0;
 
-        // Calculate totals from data rows only (skip header and summary row)
         for (let r = FIRST_DATA_ROW; r <= sheet.rowCount; r++) {
           try {
             const title = luckysheet.getCellValue(r, 1, { order: 0 });
@@ -703,16 +708,17 @@
             
             const sixty = getLiveVal(r, 9);
             const sales = getLiveVal(r, 8);
-            const profit = getLiveVal(r, 11);
+            const cost = getLiveVal(r, 11);
+            const profit = getLiveVal(r, 12);
             
             totalSixty += sixty;
             totalSales += sales;
+            totalCost += cost;
             totalProfit += profit;
             rowCount++;
           } catch(e) {}
         }
 
-        // Find the summary row location
         let summaryRow = sheet.rowCount + 1;
         let existingSummary = false;
         
@@ -728,18 +734,17 @@
         }
 
         if (!existingSummary) {
-          // Add a blank row for summary if it doesn't exist
           summaryRow = sheet.rowCount + 1;
           sheet.rowCount = summaryRow + 1;
         }
 
-        // Set summary row cells with professional styling
         const summaryData = [
           { col: 0, value: '' },
           { col: 1, value: '📊 SUMMARY' },
           { col: 8, value: totalSales },
           { col: 9, value: totalSixty },
-          { col: 11, value: totalProfit }
+          { col: 11, value: totalCost },
+          { col: 12, value: totalProfit }
         ];
 
         summaryData.forEach(item => {
@@ -758,14 +763,14 @@
           } catch(e) {}
         });
 
-        // Update footer with professional summary
         const summaryTotals = document.getElementById('summaryTotals');
         if (summaryTotals) {
           summaryTotals.style.display = 'inline';
           summaryTotals.innerHTML = `
             <span style="color:#60a5fa;">💰 Total Sales: <b style="color:#60a5fa;">${fmtMoney(totalSales)}</b></span>
             <span style="color:#4ade80; margin-left:12px;">📊 60%: <b style="color:#4ade80;">${fmtMoney(totalSixty)}</b></span>
-            <span style="color:#fbbf24; margin-left:12px;">📈 Total Profit: <b style="color:#fbbf24;">${fmtMoney(totalProfit)}</b></span>
+            <span style="color:#fbbf24; margin-left:12px;">📦 Total Cost: <b style="color:#fbbf24;">${fmtMoney(totalCost)}</b></span>
+            <span style="color:#f472b6; margin-left:12px;">📈 Total Profit: <b style="color:#f472b6;">${fmtMoney(totalProfit)}</b></span>
           `;
         }
       }
@@ -786,7 +791,6 @@
         document.getElementById('footSheet').textContent = sheet.name;
         document.getElementById('historySheetName').textContent = sheet.name;
         
-        // Add summary row after recalculating
         setTimeout(addSummaryRow, 50);
       }
 
@@ -794,17 +798,15 @@
         if (r === HEADER_ROW) return;
         if (colIsCalc(c)) return;
         
-        // Check if this is the summary row
         try {
           const title = luckysheet.getCellValue(r, 1, { order: 0 });
           if (title === '📊 SUMMARY' || title === 'SUMMARY') return;
         } catch(e) {}
         
-        if (c === 1) { // Title column updated
+        if (c === 1) {
           const titleVal = (newVal && typeof newVal === 'object') ? newVal.v : newVal;
           const productName = String(titleVal || '').trim();
           
-          // Update Price if preset exists
           const presetPrice = PRODUCT_PRICES[productName];
           if (presetPrice !== undefined) {
             try {
@@ -812,7 +814,6 @@
             } catch(e) {}
           }
           
-          // Update Cost if preset exists
           const presetCost = PRODUCT_COSTS[productName];
           if (presetCost !== undefined) {
             try {
@@ -835,18 +836,14 @@
 
       // ========== LUCKYSHEET BRIDGE ==========
       function buildLuckysheetOptions(sheet) {
-        // Build celldata - include header, data rows, and summary row if it exists
         let celldata = [...buildHeaderCellData()];
         
-        // Add data rows
         if (sheet.celldata) {
-          // Add all cells from celldata (including summary)
           celldata = celldata.concat(sheet.celldata);
         } else {
           celldata = celldata.concat(buildPreloadedDataRows(sheet.rowCount));
         }
         
-        // Ensure we have at least header and some data
         if (celldata.length === 0) {
           celldata = [...buildHeaderCellData(), ...buildPreloadedDataRows(sheet.rowCount)];
         }
@@ -878,10 +875,8 @@
           const allSheets = luckysheet.getAllSheets();
           const current = allSheets.find(s => s.name === sheetsData[activeSheetIndex].name) || allSheets[0];
           if (current) {
-            // Keep ALL cells including summary
             const celldata = current.celldata || current.data || [];
             sheetsData[activeSheetIndex].celldata = celldata;
-            // Update rowCount to include summary row
             let maxRow = 0;
             celldata.forEach(cell => {
               if (cell.r > maxRow) maxRow = cell.r;
@@ -1404,6 +1399,7 @@
           'totalsales':'totalsales','total sales':'totalsales',
           'sixty':'sixty','60%':'sixty',
           'cost':'cost','product cost':'cost',
+          'totalcost':'totalcost','total cost':'totalcost',
           'totalprofit':'totalprofit','profit':'totalprofit'
         };
         return map[norm] || null;
@@ -1443,11 +1439,12 @@
                 const rec = {};
                 keyMap.forEach((key, idx) => { if (key) rec[key] = rawRow[idx]; });
                 if (!rec.title) return;
-                const { totalSales, sixty, totalProfit } = computeRow(rec);
+                const { totalSales, sixty, totalCost, totalProfit } = computeRow(rec);
                 COLUMNS.forEach((col, cIdx) => {
                   let val;
                   if (col.key === 'totalsales') val = totalSales;
                   else if (col.key === 'sixty') val = sixty;
+                  else if (col.key === 'totalcost') val = totalCost;
                   else if (col.key === 'totalprofit') val = totalProfit;
                   else if (col.key === 'no') val = rowCursor;
                   else val = rec[col.key] !== undefined ? rec[col.key] : '';
