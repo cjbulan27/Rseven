@@ -409,7 +409,7 @@
         .sales-table {
             width: 100%;
             border-collapse: collapse;
-            min-width: 900px;
+            min-width: 1000px;
         }
 
         .sales-table th {
@@ -813,6 +813,7 @@ CREATE POLICY "Enable all for authenticated users" ON sales
                         <th>Order Item</th>
                         <th>Qty</th>
                         <th>Amount 1 (₱)</th>
+                        <th>Total Sales (₱)</th>
                         <th>Expenses</th>
                         <th>Amount 2 (₱)</th>
                         <th style="text-align:right;">Actions</th>
@@ -829,7 +830,7 @@ CREATE POLICY "Enable all for authenticated users" ON sales
 
         <div class="summary-bar">
             <span id="recordCount">0 records</span>
-            <span>Total Amount 1: <span class="total-amount" id="totalAmount1">₱ 0.00</span></span>
+            <span>Total Sales: <span class="total-amount" id="totalSales">₱ 0.00</span></span>
             <span>Total Amount 2: <span class="total-amount" id="totalAmount2">₱ 0.00</span></span>
         </div>
     </main>
@@ -925,8 +926,8 @@ CREATE POLICY "Enable all for authenticated users" ON sales
             const exportBtn = document.getElementById('exportExcelBtn');
             const checkAgainBtn = document.getElementById('checkAgainBtn');
             const recordCountSpan = document.getElementById('recordCount');
-            const totalAmount1Span = document.getElementById('totalAmount1');
             const totalAmount2Span = document.getElementById('totalAmount2');
+            const totalSalesSpan = document.getElementById('totalSales');
             const dbSetupCard = document.getElementById('dbSetupCard');
             const currentMonthDisplay = document.getElementById('currentMonthDisplay');
             const historyBtn = document.getElementById('historyBtn');
@@ -970,7 +971,7 @@ CREATE POLICY "Enable all for authenticated users" ON sales
             }
 
             // ============================================================
-            // EXPORT TO EXCEL WITH TOTAL
+            // EXPORT TO EXCEL WITH TOTAL SALES
             // ============================================================
             function exportToExcel() {
                 if (sales.length === 0) {
@@ -979,29 +980,26 @@ CREATE POLICY "Enable all for authenticated users" ON sales
                 }
 
                 // Calculate totals
-                let totalAmount1 = 0;
                 let totalAmount2 = 0;
-                let totalCombined = 0;
+                let totalSales = 0;
 
-                let csv = 'Date,Customer,Order Item,Qty,Amount 1,Expenses,Amount 2,Total\n';
+                let csv = 'Date,Customer,Order Item,Qty,Amount 1,Total Sales,Expenses,Amount 2\n';
                 sales.forEach(item => {
-                    const combined = (item.amount1 || 0) + (item.amount2 || 0);
-                    totalAmount1 += item.amount1 || 0;
+                    const totalSale = (item.qty || 0) * (item.amount1 || 0);
                     totalAmount2 += item.amount2 || 0;
-                    totalCombined += combined;
+                    totalSales += totalSale;
 
                     csv +=
-                        `${item.sale_date},${item.customer},${item.order_item},${item.qty},${item.amount1},${item.expenses || ''},${item.amount2},${combined.toFixed(2)}\n`;
+                        `${item.sale_date},${item.customer},${item.order_item},${item.qty},${item.amount1},${totalSale.toFixed(2)},${item.expenses || ''},${item.amount2}\n`;
                 });
 
                 // Add summary rows
-                csv += `\nSUMMARY,,,,,,,,,\n`;
-                csv += `Total Amount 1,,,,,,,,,${totalAmount1.toFixed(2)}\n`;
-                csv += `Total Amount 2,,,,,,,,,${totalAmount2.toFixed(2)}\n`;
-                csv += `Grand Total,,,,,,,,,${totalCombined.toFixed(2)}\n`;
-                csv += `Total Records,,,,,,,,,${sales.length}\n`;
+                csv += `\nSUMMARY\n`;
+                csv += `Total Sales,${totalSales.toFixed(2)}\n`;
+                csv += `Total Amount 2,${totalAmount2.toFixed(2)}\n`;
+                csv += `Total Records,${sales.length}\n`;
 
-                const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+                const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
                 const link = document.createElement('a');
                 const url = URL.createObjectURL(blob);
                 link.setAttribute('href', url);
@@ -1013,7 +1011,7 @@ CREATE POLICY "Enable all for authenticated users" ON sales
                 link.click();
                 document.body.removeChild(link);
                 URL.revokeObjectURL(url);
-                showToast('Exported to Excel successfully with totals!', 'success');
+                showToast('Exported to Excel successfully!', 'success');
             }
 
             // ============================================================
@@ -1209,23 +1207,24 @@ CREATE POLICY "Enable all for authenticated users" ON sales
             function render() {
                 recordCountSpan.textContent = sales.length + ' records';
 
-                let totalAmount1 = 0;
                 let totalAmount2 = 0;
+                let totalSales = 0;
 
                 if (sales.length === 0) {
                     tbody.innerHTML = '';
                     emptyState.style.display = 'block';
                     emptyState.innerHTML = '<i class="ti ti-chart-bar"></i> No sales records yet. Add your first sale.';
-                    totalAmount1Span.textContent = formatCurrency(0);
                     totalAmount2Span.textContent = formatCurrency(0);
+                    totalSalesSpan.textContent = formatCurrency(0);
                     return;
                 }
                 emptyState.style.display = 'none';
 
                 let html = '';
                 sales.forEach((item, idx) => {
-                    totalAmount1 += item.amount1 || 0;
                     totalAmount2 += item.amount2 || 0;
+                    const totalSale = (item.qty || 0) * (item.amount1 || 0);
+                    totalSales += totalSale;
 
                     html += `
                               <tr>
@@ -1235,6 +1234,7 @@ CREATE POLICY "Enable all for authenticated users" ON sales
                                 <td>${escapeHtml(item.order_item)}</td>
                                 <td>${item.qty || 0}</td>
                                 <td>${formatCurrency(item.amount1)}</td>
+                                <td style="color:#4ade80; font-weight:600;">${formatCurrency(totalSale)}</td>
                                 <td>${escapeHtml(item.expenses) || '—'}</td>
                                 <td>${formatCurrency(item.amount2)}</td>
                                 <td style="text-align:right;">
@@ -1262,8 +1262,8 @@ CREATE POLICY "Enable all for authenticated users" ON sales
                     });
                 });
 
-                totalAmount1Span.textContent = formatCurrency(totalAmount1);
                 totalAmount2Span.textContent = formatCurrency(totalAmount2);
+                totalSalesSpan.textContent = formatCurrency(totalSales);
 
                 const displayMonth = isHistoryMode ? getMonthDisplay(selectedMonth + '-01') : getMonthDisplay(new Date()
                 .toISOString());
