@@ -705,8 +705,9 @@
         <div class="sidebar-nav">
             <a class="nav-item" href="homepage.html"><i class="ti ti-home"></i> Home</a>
             <a class="nav-item" href="dashboard.html"><i class="ti ti-layout-dashboard"></i> Dashboard</a>
-            <a class="nav-item" href="sales and report.html"><i class="ti ti-box"></i> Sales and Reports</a>
-            <a class="nav-item active" href="sales.html"><i class="ti ti-chart-bar"></i> Sales Reports</a>
+            <a class="nav-item active" href="sales and report.html"><i class="ti ti-box"></i> Sales and Reports</a>
+            <a class="nav-item" href="sales.html"><i class="ti ti-chart-bar"></i> Sales</a>
+            <a class="nav-item" href="petty cash.html"><i class="ti ti-wallet"></i> Petty Cash</a>
             <a class="nav-item" href="orders.html"><i class="ti ti-orders"></i> Orders</a>
         </div>
         <div class="sidebar-logout" onclick="handleLogout()"><i class="ti ti-logout"></i> Logout</div>
@@ -735,6 +736,38 @@
                 <span id="historyBadge" style="display:none;" class="history-mode-badge">📜 History Mode</span>
             </div>
         </div>
+
+        <!-- DB Setup Card -->
+        <div class="db-setup-card" id="dbSetupCard" style="display:none;">
+            <h3><i class="ti ti-database"></i> Database Setup Required</h3>
+            <div class="step">
+                <strong>1.</strong> In your Supabase project, go to the <strong>SQL Editor</strong> and run this query:
+            </div>
+            <code id="sqlCode" style="display:block; padding:0.8rem 1rem; background:#1a0a2e; border-radius:8px; border:0.5px solid #5c3d8f; font-family: monospace; font-size:13px; white-space:pre-wrap; word-break:break-all;">CREATE TABLE sales (
+  id BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+  sale_date DATE NOT NULL,
+  customer TEXT NOT NULL,
+  order_item TEXT NOT NULL,
+  qty INTEGER NOT NULL DEFAULT 0,
+  amount1 NUMERIC(10,2) NOT NULL DEFAULT 0,
+  amount2 NUMERIC(10,2) NOT NULL DEFAULT 0,
+  expenses TEXT,
+  month_year TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE sales ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Enable all for authenticated users" ON sales
+  FOR ALL USING (auth.role() = 'authenticated')
+  WITH CHECK (auth.role() = 'authenticated');</code>
+            <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                <button class="btn-copy" onclick="copySQL()"><i class="ti ti-copy"></i> Copy SQL</button>
+                <button class="btn" style="padding:4px 16px; font-size:13px;" id="checkAgainBtn">Check Again</button>
+            </div>
+        </div>
+
         <div class="sales-controls" id="salesForm">
             <div class="control-group">
                 <label for="saleDate">Date</label>
@@ -937,7 +970,7 @@
             }
 
             // ============================================================
-            // EXPORT TO EXCEL
+            // EXPORT TO EXCEL WITH TOTAL
             // ============================================================
             function exportToExcel() {
                 if (sales.length === 0) {
@@ -945,11 +978,28 @@
                     return;
                 }
 
-                let csv = 'Date,Customer,Order Item,Qty,Amount 1,Expenses,Amount 2\n';
+                // Calculate totals
+                let totalAmount1 = 0;
+                let totalAmount2 = 0;
+                let totalCombined = 0;
+
+                let csv = 'Date,Customer,Order Item,Qty,Amount 1,Expenses,Amount 2,Total\n';
                 sales.forEach(item => {
+                    const combined = (item.amount1 || 0) + (item.amount2 || 0);
+                    totalAmount1 += item.amount1 || 0;
+                    totalAmount2 += item.amount2 || 0;
+                    totalCombined += combined;
+
                     csv +=
-                        `${item.sale_date},${item.customer},${item.order_item},${item.qty},${item.amount1},${item.expenses || ''},${item.amount2}\n`;
+                        `${item.sale_date},${item.customer},${item.order_item},${item.qty},${item.amount1},${item.expenses || ''},${item.amount2},${combined.toFixed(2)}\n`;
                 });
+
+                // Add summary rows
+                csv += `\nSUMMARY,,,,,,,,,\n`;
+                csv += `Total Amount 1,,,,,,,,,${totalAmount1.toFixed(2)}\n`;
+                csv += `Total Amount 2,,,,,,,,,${totalAmount2.toFixed(2)}\n`;
+                csv += `Grand Total,,,,,,,,,${totalCombined.toFixed(2)}\n`;
+                csv += `Total Records,,,,,,,,,${sales.length}\n`;
 
                 const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
                 const link = document.createElement('a');
@@ -963,7 +1013,7 @@
                 link.click();
                 document.body.removeChild(link);
                 URL.revokeObjectURL(url);
-                showToast('Exported to Excel successfully!', 'success');
+                showToast('Exported to Excel successfully with totals!', 'success');
             }
 
             // ============================================================
@@ -984,10 +1034,8 @@
                         .order('sale_date', { ascending: false });
 
                     if (!isHistoryMode) {
-                        // Only show current month
                         query = query.eq('month_year', currentMonth);
                     } else {
-                        // Show selected month
                         query = query.eq('month_year', selectedMonth);
                     }
 
@@ -1217,7 +1265,6 @@
                 totalAmount1Span.textContent = formatCurrency(totalAmount1);
                 totalAmount2Span.textContent = formatCurrency(totalAmount2);
 
-                // Update month display
                 const displayMonth = isHistoryMode ? getMonthDisplay(selectedMonth + '-01') : getMonthDisplay(new Date()
                 .toISOString());
                 currentMonthDisplay.textContent = displayMonth + (isHistoryMode ? ' (History)' : '');
@@ -1249,7 +1296,6 @@
                 isHistoryMode = !isHistoryMode;
 
                 if (isHistoryMode) {
-                    // Show month selector prompt
                     const monthInput = prompt('Enter month to view (YYYY-MM format, e.g. 2026-06):', selectedMonth);
                     if (monthInput && monthInput.match(/^\d{4}-\d{2}$/)) {
                         selectedMonth = monthInput;
@@ -1266,7 +1312,6 @@
                         isHistoryMode = false;
                     }
                 } else {
-                    // Return to current month
                     historyBtn.textContent = '📜 View History';
                     historyBtn.classList.remove('active');
                     currentMonthBtn.style.display = 'none';
@@ -1379,10 +1424,8 @@
                 if (!storedMonth) {
                     localStorage.setItem('rseven_current_month', now);
                 } else if (storedMonth !== now) {
-                    // New month detected - show notification
                     localStorage.setItem('rseven_current_month', now);
                     showToast(`📅 New month: ${getMonthDisplay(now + '-01')}. Records auto-archived!`, 'info');
-                    // Reload to show current month
                     if (!isHistoryMode) {
                         loadSales();
                     }
