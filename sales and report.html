@@ -1,0 +1,1404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Rseven · Sales Reports</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">
+    </script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background: #1a0a2e;
+            min-height: 100vh;
+            display: flex;
+            overflow-x: hidden;
+            color: #f0e6ff;
+        }
+
+        .sidebar {
+            width: 260px;
+            min-width: 260px;
+            height: 100vh;
+            background: #2d1054;
+            border-right: 0.5px solid #5c3d8f;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem 0 1.5rem;
+            position: relative;
+            z-index: 20;
+            transition: transform 0.35s cubic-bezier(.4, 0, .2, 1);
+            animation: slideIn 0.5s ease both;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(-100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .sidebar-logo {
+            width: 100px;
+            height: 100px;
+            animation: float 3s ease-in-out infinite, pulse 2.5s ease-in-out infinite;
+            margin-bottom: 0.75rem;
+            object-fit: contain;
+            border-radius: 12px;
+        }
+
+        @keyframes float {
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-5px);
+            }
+        }
+
+        @keyframes pulse {
+            0%,
+            100% {
+                box-shadow: 0 0 0 0 rgba(245, 197, 24, 0.4);
+            }
+            50% {
+                box-shadow: 0 0 0 10px rgba(245, 197, 24, 0);
+            }
+        }
+
+        .sidebar-name {
+            color: #f5c518;
+            font-size: 15px;
+            font-weight: 600;
+            text-align: center;
+            letter-spacing: 1px;
+            line-height: 1.5;
+            background: linear-gradient(90deg, #f5c518, #fff4a0, #f5c518);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: shimmer 3s linear infinite;
+        }
+
+        @keyframes shimmer {
+            0% {
+                background-position: -200% center;
+            }
+            100% {
+                background-position: 200% center;
+            }
+        }
+
+        .sidebar-sub {
+            color: #9d7fc4;
+            font-size: 12px;
+            text-align: center;
+            margin-top: 4px;
+        }
+
+        .sidebar-divider {
+            width: 75%;
+            height: 0.5px;
+            background: #5c3d8f;
+            margin: 1.2rem 0 1rem;
+        }
+
+        .sidebar-nav {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            gap: 4px;
+            flex: 1;
+            padding: 0 12px;
+        }
+
+        .nav-item {
+            width: 100%;
+            padding: 12px 16px;
+            color: #c9aff0;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: background 0.2s, color 0.2s;
+            text-decoration: none;
+        }
+
+        .nav-item i {
+            font-size: 18px;
+        }
+
+        .nav-item:hover {
+            background: rgba(245, 197, 24, 0.08);
+            color: #f5c518;
+        }
+
+        .nav-item.active {
+            background: rgba(245, 197, 24, 0.15);
+            color: #f5c518;
+            border: 0.5px solid rgba(245, 197, 24, 0.3);
+        }
+
+        .sidebar-logout {
+            width: calc(100% - 24px);
+            margin: 0 12px;
+            padding: 12px 16px;
+            color: #e24b4a;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: background 0.2s;
+            border: 0.5px solid rgba(226, 75, 74, 0.3);
+        }
+
+        .sidebar-logout i {
+            font-size: 18px;
+        }
+
+        .sidebar-logout:hover {
+            background: rgba(226, 75, 74, 0.1);
+        }
+
+        .hamburger {
+            display: none;
+            position: fixed;
+            top: 16px;
+            left: 16px;
+            z-index: 30;
+            background: #2d1054;
+            border: 0.5px solid #5c3d8f;
+            border-radius: 8px;
+            padding: 8px 10px;
+            cursor: pointer;
+            color: #f5c518;
+        }
+
+        .hamburger i {
+            font-size: 22px;
+        }
+
+        .overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 10;
+        }
+
+        .overlay.open {
+            display: block;
+        }
+
+        .main {
+            flex: 1;
+            min-height: 100vh;
+            padding: 2rem 2rem 2rem 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.8rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+            border-bottom: 0.5px solid #3d1a6e;
+            padding-bottom: 0.75rem;
+        }
+
+        .page-header h1 {
+            color: #f5c518;
+            font-weight: 600;
+            font-size: 24px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .page-header h1 i {
+            font-size: 28px;
+        }
+
+        .page-header .sub {
+            color: #9d7fc4;
+            font-size: 14px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .sales-controls {
+            background: #2d1054;
+            border: 0.5px solid #5c3d8f;
+            border-radius: 12px;
+            padding: 1.5rem 2rem;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: flex-end;
+            gap: 1.2rem 1.5rem;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            flex: 1 0 110px;
+            min-width: 110px;
+        }
+
+        .control-group label {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #9d7fc4;
+            font-weight: 600;
+        }
+
+        .control-group input,
+        .control-group select {
+            background: #1a0a2e;
+            border: 0.5px solid #5c3d8f;
+            border-radius: 8px;
+            padding: 10px 12px;
+            color: #f0e6ff;
+            font-size: 14px;
+            outline: none;
+            transition: border 0.2s, box-shadow 0.2s;
+            width: 100%;
+        }
+
+        .control-group input:focus,
+        .control-group select:focus {
+            border-color: #f5c518;
+            box-shadow: 0 0 0 3px rgba(245, 197, 24, 0.15);
+        }
+
+        .control-group input::placeholder {
+            color: #6b4b8a;
+        }
+
+        .btn {
+            background: #f5c518;
+            border: none;
+            border-radius: 8px;
+            padding: 10px 24px;
+            font-weight: 600;
+            font-size: 14px;
+            color: #1a0a2e;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: transform 0.15s, box-shadow 0.2s;
+            box-shadow: 0 2px 8px rgba(245, 197, 24, 0.2);
+            white-space: nowrap;
+        }
+
+        .btn:hover {
+            transform: scale(0.97);
+            box-shadow: 0 2px 12px rgba(245, 197, 24, 0.3);
+        }
+
+        .btn i {
+            font-size: 18px;
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 0.5px solid #5c3d8f;
+            color: #c9aff0;
+            box-shadow: none;
+        }
+
+        .btn-outline:hover {
+            background: rgba(245, 197, 24, 0.05);
+            border-color: #f5c518;
+            color: #f5c518;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #1a0a2e;
+            border-radius: 50%;
+            border-top-color: transparent;
+            animation: spin 0.6s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 14px 24px;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 14px;
+            font-weight: 500;
+            z-index: 1000;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.3s, transform 0.3s;
+            pointer-events: none;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .toast.success {
+            background: #22c55e;
+        }
+
+        .toast.error {
+            background: #ef4444;
+        }
+
+        .toast.info {
+            background: #3b82f6;
+        }
+
+        .table-wrap {
+            background: #2d1054;
+            border: 0.5px solid #5c3d8f;
+            border-radius: 12px;
+            overflow-x: auto;
+            padding: 0.2rem 0;
+        }
+
+        .sales-table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 900px;
+        }
+
+        .sales-table th {
+            background: rgba(245, 197, 24, 0.08);
+            color: #f5c518;
+            font-size: 12px;
+            padding: 14px 16px;
+            text-align: left;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+            border-bottom: 0.5px solid #3d1a6e;
+        }
+
+        .sales-table td {
+            color: #c9aff0;
+            font-size: 14px;
+            padding: 14px 16px;
+            border-bottom: 0.5px solid #3d1a6e;
+            vertical-align: middle;
+        }
+
+        .sales-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .sales-table tr:hover td {
+            background: rgba(245, 197, 24, 0.04);
+        }
+
+        .action-btns {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+
+        .action-btns .btn-sm {
+            background: transparent;
+            border: 0.5px solid #5c3d8f;
+            border-radius: 6px;
+            padding: 6px 14px;
+            color: #c9aff0;
+            font-size: 13px;
+            cursor: pointer;
+            transition: 0.15s;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .action-btns .btn-sm:hover {
+            border-color: #f5c518;
+            color: #f5c518;
+            background: rgba(245, 197, 24, 0.05);
+        }
+
+        .action-btns .btn-sm.danger:hover {
+            border-color: #f87171;
+            color: #f87171;
+            background: rgba(248, 113, 113, 0.05);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: #6b4b8a;
+            font-size: 15px;
+        }
+
+        .empty-state i {
+            font-size: 48px;
+            display: block;
+            margin-bottom: 12px;
+            opacity: 0.5;
+        }
+
+        .summary-bar {
+            color: #6b4b8a;
+            font-size: 13px;
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .summary-bar .total-amount {
+            color: #f5c518;
+            font-weight: 600;
+        }
+
+        .db-setup-card {
+            background: #2d1054;
+            border: 1px solid #f5c518;
+            border-radius: 12px;
+            padding: 1.5rem 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .db-setup-card h3 {
+            color: #f5c518;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .db-setup-card code {
+            background: #1a0a2e;
+            padding: 0.2rem 0.8rem;
+            border-radius: 6px;
+            color: #c9aff0;
+            font-size: 13px;
+            border: 0.5px solid #5c3d8f;
+            display: inline-block;
+            margin: 4px 0;
+            word-break: break-all;
+        }
+
+        .db-setup-card .step {
+            color: #c9aff0;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .db-setup-card .btn-copy {
+            background: transparent;
+            border: 0.5px solid #5c3d8f;
+            border-radius: 6px;
+            padding: 4px 12px;
+            color: #c9aff0;
+            font-size: 12px;
+            cursor: pointer;
+            transition: 0.15s;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .db-setup-card .btn-copy:hover {
+            border-color: #f5c518;
+            color: #f5c518;
+        }
+
+        .amount-total {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 6px;
+            background: rgba(245, 197, 24, 0.1);
+            border: 0.5px solid rgba(245, 197, 24, 0.2);
+            color: #f5c518;
+            font-weight: 600;
+        }
+
+        .month-indicator {
+            background: rgba(245, 197, 24, 0.1);
+            padding: 6px 16px;
+            border-radius: 8px;
+            border: 0.5px solid rgba(245, 197, 24, 0.2);
+            color: #f5c518;
+            font-weight: 600;
+            font-size: 14px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .month-indicator i {
+            font-size: 18px;
+        }
+
+        .month-selector {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .month-selector select {
+            background: #1a0a2e;
+            border: 0.5px solid #5c3d8f;
+            border-radius: 8px;
+            padding: 8px 14px;
+            color: #f0e6ff;
+            font-size: 14px;
+            outline: none;
+            cursor: pointer;
+        }
+
+        .month-selector select:focus {
+            border-color: #f5c518;
+        }
+
+        .history-btn {
+            background: transparent;
+            border: 0.5px solid #5c3d8f;
+            border-radius: 8px;
+            padding: 8px 16px;
+            color: #c9aff0;
+            font-size: 13px;
+            cursor: pointer;
+            transition: 0.15s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .history-btn:hover {
+            border-color: #f5c518;
+            color: #f5c518;
+            background: rgba(245, 197, 24, 0.05);
+        }
+
+        .history-btn.active {
+            border-color: #f5c518;
+            color: #f5c518;
+            background: rgba(245, 197, 24, 0.1);
+        }
+
+        .history-mode-badge {
+            display: inline-block;
+            background: rgba(245, 197, 24, 0.15);
+            color: #f5c518;
+            padding: 4px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+            border: 0.5px solid rgba(245, 197, 24, 0.2);
+        }
+
+        @media (max-width:768px) {
+            .sidebar {
+                position: fixed;
+                left: 0;
+                top: 0;
+                transform: translateX(-100%);
+            }
+            .sidebar.open {
+                transform: translateX(0);
+            }
+            .hamburger {
+                display: flex;
+            }
+            .overlay.open {
+                display: block;
+            }
+            .main {
+                padding: 1.5rem;
+                padding-top: 4.5rem;
+            }
+            .sales-controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .control-group {
+                flex: 1 1 auto;
+            }
+            .page-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .header-actions {
+                width: 100%;
+            }
+            .toast {
+                bottom: 10px;
+                right: 10px;
+                left: 10px;
+                text-align: center;
+            }
+            .db-setup-card {
+                padding: 1rem;
+            }
+            .month-selector {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <button class="hamburger" onclick="toggleNav()" aria-label="Toggle menu">
+        <i class="ti ti-menu-2"></i>
+    </button>
+    <div class="overlay" id="overlay" onclick="closeNav()"></div>
+
+    <div class="sidebar" id="sidebar">
+        <img src="89072922_3028538593858631_7555063944310685696_n.jpg" alt="Rseven Logo" class="sidebar-logo" />
+        <div class="sidebar-name">RSEVEN</div>
+        <div class="sidebar-sub">Graphic Solution</div>
+        <div class="sidebar-divider"></div>
+        <div class="sidebar-nav">
+            <a class="nav-item" href="homepage.html"><i class="ti ti-home"></i> Home</a>
+            <a class="nav-item" href="dashboard.html"><i class="ti ti-layout-dashboard"></i> Dashboard</a>
+            <a class="nav-item" href="sales and report.html"><i class="ti ti-box"></i> Sales and Reports</a>
+            <a class="nav-item active" href="sales.html"><i class="ti ti-chart-bar"></i> Sales Reports</a>
+            <a class="nav-item" href="orders.html"><i class="ti ti-orders"></i> Orders</a>
+        </div>
+        <div class="sidebar-logout" onclick="handleLogout()"><i class="ti ti-logout"></i> Logout</div>
+    </div>
+
+    <main class="main" id="main">
+        <div class="page-header">
+            <div>
+                <h1><i class="ti ti-chart-bar"></i> Sales Reports</h1>
+                <div class="sub">Track sales: date, customer, items, quantities & amounts</div>
+            </div>
+            <div class="header-actions">
+                <button class="btn" id="exportExcelBtn"><i class="ti ti-file-spreadsheet"></i> Export to Excel</button>
+                <button class="btn" id="refreshBtn"><i class="ti ti-refresh"></i> Refresh</button>
+            </div>
+        </div>
+
+        <div style="display:flex; flex-wrap:wrap; gap:12px; align-items:center; justify-content:space-between;">
+            <div class="month-indicator">
+                <i class="ti ti-calendar-month"></i>
+                <span id="currentMonthDisplay">Loading...</span>
+            </div>
+            <div class="month-selector">
+                <button class="history-btn" id="historyBtn"><i class="ti ti-clock"></i> View History</button>
+                <button class="history-btn" id="currentMonthBtn" style="display:none;"><i class="ti ti-calendar"></i> Current Month</button>
+                <span id="historyBadge" style="display:none;" class="history-mode-badge">📜 History Mode</span>
+            </div>
+        </div>
+        <div class="sales-controls" id="salesForm">
+            <div class="control-group">
+                <label for="saleDate">Date</label>
+                <input type="date" id="saleDate" />
+            </div>
+            <div class="control-group">
+                <label for="customerName">Customer</label>
+                <input type="text" id="customerName" placeholder="e.g. John Doe" />
+            </div>
+            <div class="control-group">
+                <label for="orderItem">Order Item</label>
+                <input type="text" id="orderItem" placeholder="e.g. Sticker Paper" />
+            </div>
+            <div class="control-group">
+                <label for="saleQty">Qty</label>
+                <input type="number" id="saleQty" placeholder="0" min="0" step="1" />
+            </div>
+            <div class="control-group">
+                <label for="saleAmount1">Amount 1 (₱)</label>
+                <input type="number" id="saleAmount1" placeholder="0.00" min="0" step="0.01" />
+            </div>
+            <div class="control-group">
+                <label for="saleExpenses">Expenses</label>
+                <input type="text" id="saleExpenses" placeholder="e.g. Shipping, Materials" />
+            </div>
+            <div class="control-group">
+                <label for="saleAmount2">Amount 2 (₱)</label>
+                <input type="number" id="saleAmount2" placeholder="0.00" min="0" step="0.01" />
+            </div>
+            <div class="control-group" style="flex:0 0 auto; justify-content:flex-end; min-width:auto;">
+                <button class="btn" id="saveSaleBtn"><i class="ti ti-device-floppy"></i> Add Sale</button>
+                <button class="btn btn-outline" id="cancelEditBtn" style="display:none;"><i class="ti ti-x"></i> Cancel</button>
+            </div>
+        </div>
+
+        <div class="table-wrap">
+            <table class="sales-table" id="salesTable">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Date</th>
+                        <th>Customer</th>
+                        <th>Order Item</th>
+                        <th>Qty</th>
+                        <th>Amount 1 (₱)</th>
+                        <th>Expenses</th>
+                        <th>Amount 2 (₱)</th>
+                        <th style="text-align:right;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="salesBody">
+                </tbody>
+            </table>
+            <div class="empty-state" id="emptyState">
+                <i class="ti ti-chart-bar"></i>
+                No sales records yet. Add your first sale.
+            </div>
+        </div>
+
+        <div class="summary-bar">
+            <span id="recordCount">0 records</span>
+            <span>Total Amount 1: <span class="total-amount" id="totalAmount1">₱ 0.00</span></span>
+            <span>Total Amount 2: <span class="total-amount" id="totalAmount2">₱ 0.00</span></span>
+        </div>
+    </main>
+
+    <script>
+        // ============================================================
+        // SUPABASE CONFIG
+        // ============================================================
+        const SUPABASE_URL = 'https://pxnmojyievkshwaklfzj.supabase.co';
+        const SUPABASE_ANON_KEY =
+            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB4bm1vanlpZXZrc2h3YWtsZnpqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIyNDQ1MTAsImV4cCI6MjA5NzgyMDUxMH0.UDC2eg76kA4YJKhlh6sLhdFubF7L_zwWsnJxKnUwOGQ';
+
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // ============================================================
+        // TOAST
+        // ============================================================
+        function showToast(message, type = 'info') {
+            let toast = document.getElementById('toast');
+            if (!toast) {
+                toast = document.createElement('div');
+                toast.id = 'toast';
+                toast.className = 'toast';
+                document.body.appendChild(toast);
+            }
+            toast.textContent = message;
+            toast.className = 'toast ' + type;
+            setTimeout(() => toast.classList.add('show'), 10);
+            clearTimeout(toast._hide);
+            toast._hide = setTimeout(() => toast.classList.remove('show'), 3500);
+        }
+
+        // ============================================================
+        // NAV
+        // ============================================================
+        function toggleNav() {
+            document.getElementById('sidebar').classList.toggle('open');
+            document.getElementById('overlay').classList.toggle('open');
+        }
+
+        function closeNav() {
+            document.getElementById('sidebar').classList.remove('open');
+            document.getElementById('overlay').classList.remove('open');
+        }
+
+        function handleLogout() {
+            if (confirm('Logout?')) {
+                sessionStorage.removeItem('username');
+                window.location.href = 'login.html';
+            }
+        }
+
+        function copySQL() {
+            const code = document.getElementById('sqlCode').textContent;
+            navigator.clipboard.writeText(code).then(() => {
+                showToast('SQL copied to clipboard!', 'success');
+            }).catch(() => {
+                const ta = document.createElement('textarea');
+                ta.value = code;
+                document.body.appendChild(ta);
+                ta.select();
+                document.execCommand('copy');
+                ta.remove();
+                showToast('SQL copied!', 'success');
+            });
+        }
+
+        // ============================================================
+        // MAIN APP
+        // ============================================================
+        (function() {
+            "use strict";
+
+            let sales = [];
+            let editingId = null;
+            let isLoading = false;
+            let isHistoryMode = false;
+            let currentMonth = '';
+            let selectedMonth = '';
+
+            const tbody = document.getElementById('salesBody');
+            const emptyState = document.getElementById('emptyState');
+            const saleDate = document.getElementById('saleDate');
+            const customerName = document.getElementById('customerName');
+            const orderItem = document.getElementById('orderItem');
+            const saleQty = document.getElementById('saleQty');
+            const saleAmount1 = document.getElementById('saleAmount1');
+            const saleAmount2 = document.getElementById('saleAmount2');
+            const saleExpenses = document.getElementById('saleExpenses');
+            const saveBtn = document.getElementById('saveSaleBtn');
+            const cancelBtn = document.getElementById('cancelEditBtn');
+            const refreshBtn = document.getElementById('refreshBtn');
+            const exportBtn = document.getElementById('exportExcelBtn');
+            const checkAgainBtn = document.getElementById('checkAgainBtn');
+            const recordCountSpan = document.getElementById('recordCount');
+            const totalAmount1Span = document.getElementById('totalAmount1');
+            const totalAmount2Span = document.getElementById('totalAmount2');
+            const dbSetupCard = document.getElementById('dbSetupCard');
+            const currentMonthDisplay = document.getElementById('currentMonthDisplay');
+            const historyBtn = document.getElementById('historyBtn');
+            const currentMonthBtn = document.getElementById('currentMonthBtn');
+            const historyBadge = document.getElementById('historyBadge');
+
+            const today = new Date().toISOString().split('T')[0];
+            saleDate.value = today;
+
+            function getMonthYear(dateStr) {
+                const d = new Date(dateStr);
+                return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+            }
+
+            function getMonthDisplay(dateStr) {
+                const d = new Date(dateStr);
+                return d.toLocaleString('en-US', { month: 'long', year: 'numeric' });
+            }
+
+            function getCurrentMonth() {
+                return getMonthYear(new Date().toISOString());
+            }
+
+            currentMonth = getCurrentMonth();
+            selectedMonth = currentMonth;
+
+            function escapeHtml(str) {
+                if (!str) return '';
+                return String(str).replace(/[&<>"]/g, m => m === '&' ? '&amp;' : m === '<' ? '&lt;' : m === '>' ? '&gt;' :
+                    '&quot;');
+            }
+
+            function formatCurrency(amount) {
+                return '₱ ' + parseFloat(amount || 0).toFixed(2);
+            }
+
+            function saveButtonLabel() {
+                return editingId ?
+                    '<i class="ti ti-device-floppy"></i> Update' :
+                    '<i class="ti ti-device-floppy"></i> Add Sale';
+            }
+
+            // ============================================================
+            // EXPORT TO EXCEL
+            // ============================================================
+            function exportToExcel() {
+                if (sales.length === 0) {
+                    showToast('No data to export!', 'error');
+                    return;
+                }
+
+                let csv = 'Date,Customer,Order Item,Qty,Amount 1,Expenses,Amount 2\n';
+                sales.forEach(item => {
+                    csv +=
+                        `${item.sale_date},${item.customer},${item.order_item},${item.qty},${item.amount1},${item.expenses || ''},${item.amount2}\n`;
+                });
+
+                const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement('a');
+                const url = URL.createObjectURL(blob);
+                link.setAttribute('href', url);
+                link.setAttribute('download',
+                    `sales_report_${isHistoryMode ? 'history_' + selectedMonth : 'current'}_${new Date().toISOString().split('T')[0]}.csv`
+                    );
+                link.style.visibility = 'hidden';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+                showToast('Exported to Excel successfully!', 'success');
+            }
+
+            // ============================================================
+            // LOAD
+            // ============================================================
+            async function loadSales() {
+                if (isLoading) return;
+                isLoading = true;
+                dbSetupCard.style.display = 'none';
+                try {
+                    emptyState.style.display = 'block';
+                    emptyState.innerHTML = '<i class="ti ti-chart-bar"></i> Loading sales data...';
+                    tbody.innerHTML = '';
+
+                    let query = supabaseClient
+                        .from('sales')
+                        .select('*')
+                        .order('sale_date', { ascending: false });
+
+                    if (!isHistoryMode) {
+                        // Only show current month
+                        query = query.eq('month_year', currentMonth);
+                    } else {
+                        // Show selected month
+                        query = query.eq('month_year', selectedMonth);
+                    }
+
+                    const { data: items, error } = await query;
+
+                    if (error) {
+                        if (error.code === '42P01') {
+                            dbSetupCard.style.display = 'flex';
+                            emptyState.innerHTML = '<i class="ti ti-chart-bar"></i> No sales data.';
+                            showToast('Table not found. Please create the sales table.', 'error');
+                        } else {
+                            throw error;
+                        }
+                        return;
+                    }
+                    sales = items || [];
+                    render();
+                    if (sales.length > 0) {
+                        const mode = isHistoryMode ? 'history' : 'current';
+                        showToast(`Loaded ${sales.length} records (${mode})`, 'success');
+                    }
+                } catch (err) {
+                    console.error(err);
+                    emptyState.style.display = 'block';
+                    emptyState.innerHTML = '<i class="ti ti-chart-bar"></i> Error loading sales data.';
+                    showToast('Error: ' + err.message, 'error');
+                } finally {
+                    isLoading = false;
+                }
+            }
+
+            // ============================================================
+            // SAVE
+            // ============================================================
+            async function saveSale() {
+                const date = saleDate.value.trim();
+                const customer = customerName.value.trim();
+                const item = orderItem.value.trim();
+                const qty = parseInt(saleQty.value, 10);
+                const amount1 = parseFloat(saleAmount1.value) || 0;
+                const amount2 = parseFloat(saleAmount2.value) || 0;
+                const expenses = saleExpenses.value.trim();
+                const monthYear = getMonthYear(date);
+
+                if (!date) {
+                    showToast('Date is required.', 'error');
+                    saleDate.focus();
+                    return;
+                }
+                if (!customer) {
+                    showToast('Customer name is required.', 'error');
+                    customerName.focus();
+                    return;
+                }
+                if (!item) {
+                    showToast('Order item is required.', 'error');
+                    orderItem.focus();
+                    return;
+                }
+                if (isNaN(qty) || qty < 0) {
+                    showToast('Quantity must be >= 0.', 'error');
+                    saleQty.focus();
+                    return;
+                }
+                if (amount1 < 0) {
+                    showToast('Amount 1 cannot be negative.', 'error');
+                    saleAmount1.focus();
+                    return;
+                }
+                if (amount2 < 0) {
+                    showToast('Amount 2 cannot be negative.', 'error');
+                    saleAmount2.focus();
+                    return;
+                }
+
+                saveBtn.disabled = true;
+                saveBtn.innerHTML = '<span class="loading-spinner"></span> Saving...';
+
+                try {
+                    if (editingId) {
+                        const { error } = await supabaseClient
+                            .from('sales')
+                            .update({
+                                sale_date: date,
+                                customer: customer,
+                                order_item: item,
+                                qty: qty,
+                                amount1: amount1,
+                                amount2: amount2,
+                                expenses: expenses,
+                                month_year: monthYear,
+                                updated_at: new Date().toISOString()
+                            })
+                            .eq('id', editingId);
+                        if (error) throw error;
+                        cancelEdit();
+                        showToast('Updated successfully!', 'success');
+                    } else {
+                        const { data, error } = await supabaseClient
+                            .from('sales')
+                            .insert([{
+                                sale_date: date,
+                                customer: customer,
+                                order_item: item,
+                                qty: qty,
+                                amount1: amount1,
+                                amount2: amount2,
+                                expenses: expenses,
+                                month_year: monthYear
+                            }])
+                            .select();
+                        if (error) throw error;
+                        clearForm();
+                        showToast('Added successfully!', 'success');
+                    }
+                    await loadSales();
+                } catch (err) {
+                    console.error(err);
+                    showToast('Error: ' + err.message, 'error');
+                } finally {
+                    saveBtn.disabled = false;
+                    saveBtn.innerHTML = saveButtonLabel();
+                }
+            }
+
+            // ============================================================
+            // DELETE
+            // ============================================================
+            async function deleteSale(id) {
+                const item = sales.find(it => it.id === id);
+                if (!item) return;
+                if (!confirm(`Delete sale record for "${item.customer}"?`)) return;
+                try {
+                    const { error } = await supabaseClient.from('sales').delete().eq('id', id);
+                    if (error) throw error;
+                    if (editingId === id) cancelEdit();
+                    showToast('Deleted sale record', 'info');
+                    await loadSales();
+                } catch (err) {
+                    showToast('Delete error: ' + err.message, 'error');
+                }
+            }
+
+            // ============================================================
+            // HANDLE ACTION
+            // ============================================================
+            function handleAction(id, action) {
+                const item = sales.find(it => it.id === id);
+                if (!item) return;
+
+                if (action === 'edit') {
+                    editingId = id;
+                    saleDate.value = item.sale_date || '';
+                    customerName.value = item.customer || '';
+                    orderItem.value = item.order_item || '';
+                    saleQty.value = item.qty || 0;
+                    saleAmount1.value = item.amount1 || 0;
+                    saleAmount2.value = item.amount2 || 0;
+                    saleExpenses.value = item.expenses || '';
+                    saveBtn.innerHTML = saveButtonLabel();
+                    cancelBtn.style.display = 'inline-flex';
+                    saleDate.focus();
+                } else if (action === 'delete') {
+                    deleteSale(id);
+                }
+            }
+
+            // ============================================================
+            // RENDER
+            // ============================================================
+            function render() {
+                recordCountSpan.textContent = sales.length + ' records';
+
+                let totalAmount1 = 0;
+                let totalAmount2 = 0;
+
+                if (sales.length === 0) {
+                    tbody.innerHTML = '';
+                    emptyState.style.display = 'block';
+                    emptyState.innerHTML = '<i class="ti ti-chart-bar"></i> No sales records yet. Add your first sale.';
+                    totalAmount1Span.textContent = formatCurrency(0);
+                    totalAmount2Span.textContent = formatCurrency(0);
+                    return;
+                }
+                emptyState.style.display = 'none';
+
+                let html = '';
+                sales.forEach((item, idx) => {
+                    totalAmount1 += item.amount1 || 0;
+                    totalAmount2 += item.amount2 || 0;
+
+                    html += `
+                              <tr>
+                                <td>${idx + 1}</td>
+                                <td>${escapeHtml(item.sale_date)}</td>
+                                <td><strong>${escapeHtml(item.customer)}</strong></td>
+                                <td>${escapeHtml(item.order_item)}</td>
+                                <td>${item.qty || 0}</td>
+                                <td>${formatCurrency(item.amount1)}</td>
+                                <td>${escapeHtml(item.expenses) || '—'}</td>
+                                <td>${formatCurrency(item.amount2)}</td>
+                                <td style="text-align:right;">
+                                  <div class="action-btns">
+                                    <button class="btn-sm edit-btn" data-id="${item.id}"><i class="ti ti-edit"></i> Edit</button>
+                                    <button class="btn-sm danger delete-btn" data-id="${item.id}"><i class="ti ti-trash"></i> Delete</button>
+                                  </div>
+                                </td>
+                              </tr>
+                            `;
+                });
+                tbody.innerHTML = html;
+
+                document.querySelectorAll('.edit-btn').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const id = parseInt(this.getAttribute('data-id'));
+                        handleAction(id, 'edit');
+                    });
+                });
+
+                document.querySelectorAll('.delete-btn').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const id = parseInt(this.getAttribute('data-id'));
+                        handleAction(id, 'delete');
+                    });
+                });
+
+                totalAmount1Span.textContent = formatCurrency(totalAmount1);
+                totalAmount2Span.textContent = formatCurrency(totalAmount2);
+
+                // Update month display
+                const displayMonth = isHistoryMode ? getMonthDisplay(selectedMonth + '-01') : getMonthDisplay(new Date()
+                .toISOString());
+                currentMonthDisplay.textContent = displayMonth + (isHistoryMode ? ' (History)' : '');
+            }
+
+            function cancelEdit() {
+                editingId = null;
+                saveBtn.innerHTML = saveButtonLabel();
+                cancelBtn.style.display = 'none';
+                clearForm();
+                render();
+            }
+
+            function clearForm() {
+                const today = new Date().toISOString().split('T')[0];
+                saleDate.value = today;
+                customerName.value = '';
+                orderItem.value = '';
+                saleQty.value = '';
+                saleAmount1.value = '';
+                saleAmount2.value = '';
+                saleExpenses.value = '';
+            }
+
+            // ============================================================
+            // HISTORY MODE
+            // ============================================================
+            function toggleHistoryMode() {
+                isHistoryMode = !isHistoryMode;
+
+                if (isHistoryMode) {
+                    // Show month selector prompt
+                    const monthInput = prompt('Enter month to view (YYYY-MM format, e.g. 2026-06):', selectedMonth);
+                    if (monthInput && monthInput.match(/^\d{4}-\d{2}$/)) {
+                        selectedMonth = monthInput;
+                        historyBtn.textContent = '📊 Current Month';
+                        historyBtn.classList.add('active');
+                        currentMonthBtn.style.display = 'inline-flex';
+                        historyBadge.style.display = 'inline-block';
+                        historyBadge.textContent = `📜 Viewing: ${getMonthDisplay(selectedMonth + '-01')}`;
+                        loadSales();
+                    } else if (monthInput !== null) {
+                        showToast('Invalid format. Use YYYY-MM (e.g. 2026-06)', 'error');
+                        isHistoryMode = false;
+                    } else {
+                        isHistoryMode = false;
+                    }
+                } else {
+                    // Return to current month
+                    historyBtn.textContent = '📜 View History';
+                    historyBtn.classList.remove('active');
+                    currentMonthBtn.style.display = 'none';
+                    historyBadge.style.display = 'none';
+                    selectedMonth = currentMonth;
+                    loadSales();
+                }
+            }
+
+            // ============================================================
+            // EVENTS
+            // ============================================================
+            saveBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                saveSale();
+            });
+
+            cancelBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                cancelEdit();
+            });
+
+            refreshBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                loadSales();
+            });
+
+            exportBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                exportToExcel();
+            });
+
+            historyBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                toggleHistoryMode();
+            });
+
+            currentMonthBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                if (isHistoryMode) {
+                    isHistoryMode = false;
+                    historyBtn.textContent = '📜 View History';
+                    historyBtn.classList.remove('active');
+                    currentMonthBtn.style.display = 'none';
+                    historyBadge.style.display = 'none';
+                    selectedMonth = currentMonth;
+                    loadSales();
+                }
+            });
+
+            if (checkAgainBtn) {
+                checkAgainBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    loadSales();
+                });
+            }
+
+            document.getElementById('saleDate').addEventListener('keydown', e => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    document.getElementById('customerName').focus();
+                }
+            });
+            document.getElementById('customerName').addEventListener('keydown', e => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    document.getElementById('orderItem').focus();
+                }
+            });
+            document.getElementById('orderItem').addEventListener('keydown', e => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    document.getElementById('saleQty').focus();
+                }
+            });
+            document.getElementById('saleQty').addEventListener('keydown', e => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    document.getElementById('saleAmount1').focus();
+                }
+            });
+            document.getElementById('saleAmount1').addEventListener('keydown', e => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    document.getElementById('saleExpenses').focus();
+                }
+            });
+            document.getElementById('saleExpenses').addEventListener('keydown', e => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    document.getElementById('saleAmount2').focus();
+                }
+            });
+            document.getElementById('saleAmount2').addEventListener('keydown', e => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    saveSale();
+                }
+            });
+
+            document.getElementById('overlay').addEventListener('click', closeNav);
+
+            // ============================================================
+            // AUTO-RESET CHECK (monthly)
+            // ============================================================
+            function checkMonthlyReset() {
+                const storedMonth = localStorage.getItem('rseven_current_month');
+                const now = getCurrentMonth();
+
+                if (!storedMonth) {
+                    localStorage.setItem('rseven_current_month', now);
+                } else if (storedMonth !== now) {
+                    // New month detected - show notification
+                    localStorage.setItem('rseven_current_month', now);
+                    showToast(`📅 New month: ${getMonthDisplay(now + '-01')}. Records auto-archived!`, 'info');
+                    // Reload to show current month
+                    if (!isHistoryMode) {
+                        loadSales();
+                    }
+                }
+            }
+
+            // ============================================================
+            // INIT
+            // ============================================================
+            checkMonthlyReset();
+            loadSales();
+            setInterval(() => {
+                checkMonthlyReset();
+                loadSales();
+            }, 60000);
+        })();
+    </script>
+</body>
+</html>
